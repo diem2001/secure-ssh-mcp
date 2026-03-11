@@ -518,9 +518,12 @@
     margin-bottom: 0.25rem;
   }
 
+  .zone-internet { background: rgba(255, 107, 107, 0.15); color: var(--accent3); }
   .zone-untrusted { background: rgba(255, 107, 107, 0.15); color: var(--accent3); }
+  .zone-wan { background: rgba(255, 217, 61, 0.15); color: var(--accent4); }
   .zone-dmz { background: rgba(255, 217, 61, 0.15); color: var(--accent4); }
   .zone-trusted { background: rgba(0, 212, 170, 0.15); color: var(--accent2); }
+  .zone-targets { background: rgba(108, 99, 255, 0.15); color: var(--accent); }
   .zone-isolated { background: rgba(108, 99, 255, 0.15); color: var(--accent); }
 
   .severity-badge {
@@ -799,7 +802,7 @@
       <div class="toc-item"><span class="toc-num">08</span> Threat Model &amp; Attack Surface</div>
       <div class="toc-item"><span class="toc-num">09</span> Logging &amp; Observability</div>
       <div class="toc-item"><span class="toc-num">10</span> DSGVO Compliance</div>
-      <div class="toc-item"><span class="toc-num">11</span> Kubernetes Deployment</div>
+      <div class="toc-item"><span class="toc-num">11</span> Infrastructure Deployment</div>
       <div class="toc-item"><span class="toc-num">12</span> Roadmap</div>
     </div>
   </div>
@@ -846,19 +849,19 @@
   <!-- 02 ARCHITECTURE -->
   <section>
     <h2><span class="num">02</span> System Architecture</h2>
-    <p>The architecture implements a <strong>split-brain pattern</strong>: high-level reasoning runs on the public AI (Claude), while low-level data processing runs on a self-hosted LLM (MiniMax 2.5). An MCP server bridges the two with strict anonymization at the boundary.</p>
+    <p>The architecture implements a <strong>layered isolation pattern</strong> across four security zones. The Claude Code instance runs in the Company WAN &mdash; isolated from the internet, accessible only to a defined user set. All intelligence that touches raw data runs in a separate trusted zone that only the Claude Code instance can reach.</p>
 
     <div class="arch-layout">
-      <!-- Zone 1: Untrusted -->
+      <!-- Zone: Internet -->
       <div class="arch-zone">
-        <span class="arch-zone-label zone-untrusted">Zone 1 &mdash; Untrusted (Anthropic Infrastructure)</span>
+        <span class="arch-zone-label zone-untrusted">Internet (Untrusted)</span>
         <div class="arch-box" style="border-color: rgba(255,107,107,0.3);">
-          <div class="arch-box-title" style="color: var(--accent);">Claude Opus / Sonnet</div>
+          <div class="arch-box-title" style="color: var(--accent3);">Anthropic Cloud</div>
+          <div class="arch-box-subtitle">Third-party infrastructure &mdash; no data control</div>
           <ul class="arch-box-items">
-            <li>High-level reasoning &amp; task planning</li>
-            <li>Receives only anonymized context</li>
-            <li>Issues SSH tasks via MCP tool calls</li>
-            <li>No direct network access to target machines</li>
+            <li>Claude Opus / Sonnet API inference</li>
+            <li>Web Search (research)</li>
+            <li>All data entering this zone is considered permanently disclosed</li>
           </ul>
         </div>
       </div>
@@ -866,98 +869,137 @@
       <!-- Connector -->
       <div class="arch-connector" style="height: 70px;">
         <div class="arch-connector-label">
-          <span style="color: var(--accent4);">MCP Protocol</span><br>
-          <span style="color: var(--accent2); font-size: 0.65rem;">Only anonymized payloads cross this boundary</span>
+          <span style="color: var(--accent3);">Anthropic API + Web</span><br>
+          <span style="color: var(--text-dim); font-size: 0.65rem;">Only anonymized context reaches Anthropic</span>
         </div>
       </div>
 
-      <!-- Zone 2: DMZ -->
+      <!-- Zone: Company WAN -->
       <div class="arch-zone">
-        <span class="arch-zone-label zone-dmz">Zone 2 &mdash; DMZ (Self-Hosted, Network-Isolated)</span>
+        <span class="arch-zone-label zone-dmz">Company WAN (Isolated)</span>
         <div class="arch-box" style="border-color: rgba(255,217,61,0.3);">
-          <div class="arch-box-title" style="color: var(--accent4);">MCP Server <span style="color: var(--text-dim); font-weight: 400;">(Node.js + Claude Agent SDK)</span></div>
+          <div class="arch-box-title" style="color: var(--accent4);">Claude Code Instance</div>
+          <div class="arch-box-subtitle">Isolated runtime &mdash; Company WAN only &mdash; ACL-controlled user set</div>
+          <div class="arch-subgrid">
+            <div class="arch-subbox">
+              <div class="arch-subbox-title" style="color: var(--accent);">Intelligence</div>
+              <ul class="arch-subbox-items">
+                <li>High-level reasoning (via Anthropic API)</li>
+                <li>Web browsing for research</li>
+                <li>Task planning &amp; delegation</li>
+              </ul>
+            </div>
+            <div class="arch-subbox">
+              <div class="arch-subbox-title" style="color: var(--accent);">Boundaries</div>
+              <ul class="arch-subbox-items">
+                <li>No direct SSH to targets</li>
+                <li>Calls MCP Server via MCP protocol</li>
+                <li>Only allowed outbound to trusted zone</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connector -->
+      <div class="arch-connector" style="height: 70px;">
+        <div class="arch-connector-label">
+          <span style="color: var(--accent4);">MCP Protocol (JSON-RPC)</span><br>
+          <span style="color: var(--accent2); font-size: 0.65rem;">Only connection from Company WAN into Trusted Zone</span>
+        </div>
+      </div>
+
+      <!-- Zone: Trusted -->
+      <div class="arch-zone">
+        <span class="arch-zone-label zone-trusted">Trusted Zone (Self-Hosted, Maximum Isolation)</span>
+        <p style="font-size: 0.75rem; color: var(--text-dim); margin: 0 0 0.75rem;">Each component runs as a separate instance &mdash; VMs, bare-metal, or Kubernetes/Docker resources</p>
+        <div class="arch-box" style="border-color: rgba(0,212,170,0.3); margin-bottom: 0.75rem;">
+          <div class="arch-box-title" style="color: var(--accent2);">MCP Server <span style="color: var(--text-dim); font-weight: 400;">(Instance: VM / K8s / Docker)</span></div>
+          <div class="arch-box-subtitle">Only accepts connections from Claude Code instance</div>
           <div class="arch-subgrid">
             <div class="arch-subbox">
               <div class="arch-subbox-title" style="color: var(--accent2);">SSH Gateway</div>
               <ul class="arch-subbox-items">
-                <li>Key validation</li>
-                <li>Session mgmt</li>
-                <li>Command exec</li>
+                <li>Ephemeral key generation</li>
+                <li>Session management</li>
+                <li>Command execution</li>
               </ul>
             </div>
             <div class="arch-subbox">
               <div class="arch-subbox-title" style="color: var(--accent2);">Anonymization</div>
               <ul class="arch-subbox-items">
-                <li>Layer 1: Regex</li>
-                <li>Layer 2: LLM</li>
-                <li>Canary tokens</li>
+                <li>Layer 1: Regex (deterministic)</li>
+                <li>Layer 2: Local AI (contextual)</li>
+                <li>Canary token validation</li>
               </ul>
             </div>
             <div class="arch-subbox">
               <div class="arch-subbox-title" style="color: var(--accent2);">Escalation Logic</div>
               <ul class="arch-subbox-items">
-                <li>Local-first</li>
-                <li>Anon + escalate</li>
-                <li>Result assembly</li>
+                <li>Local-first resolution</li>
+                <li>Anonymize + escalate to Claude Code</li>
+                <li>Web search for research</li>
               </ul>
             </div>
             <div class="arch-subbox">
               <div class="arch-subbox-title" style="color: var(--accent2);">Session Logger</div>
               <ul class="arch-subbox-items">
-                <li>Anonymized I/O</li>
-                <li>Command audit</li>
+                <li>Anonymized I/O logging</li>
+                <li>Command audit trail</li>
                 <li>Cost tracking</li>
               </ul>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Split connector -->
-      <div class="arch-split-connector">
-        <div class="arch-split-line">
-          <div class="line"></div>
-          <div class="label" style="color: var(--accent2);">gRPC / HTTP</div>
-          <div class="line"></div>
-        </div>
-        <div class="arch-split-line">
-          <div class="line"></div>
-          <div class="label" style="color: var(--accent3);">SSH (ephemeral key)</div>
-          <div class="line"></div>
-        </div>
-      </div>
-
-      <!-- Bottom zones -->
-      <div class="arch-split">
-        <div>
-          <span class="arch-zone-label zone-trusted">Zone 3 &mdash; Trusted</span>
-          <div class="arch-box" style="border-color: rgba(0,212,170,0.3); margin-bottom: 0.75rem;">
-            <div class="arch-box-title" style="color: var(--accent2);">MiniMax 2.5</div>
+        <div class="arch-split" style="max-width: 100%;">
+          <div class="arch-box" style="border-color: rgba(0,212,170,0.3);">
+            <div class="arch-box-title" style="color: var(--accent2);">Local AI &mdash; MiniMax 2.5 <span style="color: var(--text-dim); font-weight: 400;">(Separate Instance)</span></div>
             <ul class="arch-box-items">
-              <li>Self-hosted LLM</li>
-              <li>Raw data access</li>
-              <li>No external net</li>
-              <li>No logging to ext</li>
+              <li>Self-hosted LLM inference</li>
+              <li>Raw data access for local reasoning</li>
+              <li>Anonymization Layer 2</li>
+              <li>No external network access</li>
             </ul>
           </div>
           <div class="arch-box" style="border-color: rgba(0,212,170,0.3);">
-            <div class="arch-box-title" style="color: var(--accent2);">PostgreSQL + Qdrant</div>
+            <div class="arch-box-title" style="color: var(--accent2);">Storage <span style="color: var(--text-dim); font-weight: 400;">(Separate Instance)</span></div>
             <ul class="arch-box-items">
-              <li>Anonymized logs</li>
-              <li>Vector embeddings</li>
-              <li>Auto-purge raw</li>
+              <li>PostgreSQL: session metadata, JSONB</li>
+              <li>Qdrant: vector embeddings</li>
+              <li>Auto-purge raw logs after embedding</li>
+              <li>No external network access</li>
             </ul>
           </div>
         </div>
-        <div>
-          <span class="arch-zone-label zone-isolated">Zone 4 &mdash; Isolated (Customer Infra)</span>
+      </div>
+
+      <!-- Split connector to targets -->
+      <div class="arch-split-connector">
+        <div class="arch-split-line">
+          <div class="line"></div>
+          <div class="label" style="color: var(--accent3);">SSH (ephemeral key, 15min TTL)</div>
+          <div class="line"></div>
+        </div>
+      </div>
+
+      <!-- Zone: Targets -->
+      <div class="arch-zone">
+        <span class="arch-zone-label zone-isolated">Targets (Variable &mdash; Internal or External)</span>
+        <div class="arch-split" style="max-width: 100%;">
           <div class="arch-box" style="border-color: rgba(108,99,255,0.3);">
-            <div class="arch-box-title" style="color: var(--accent3);">Target Machines</div>
+            <div class="arch-box-title" style="color: var(--accent);">Internal Servers</div>
             <ul class="arch-box-items">
-              <li>SSH port 22 only</li>
-              <li>Firewall: MCP server IP</li>
-              <li>No AI agent access</li>
-              <li>Customer workloads</li>
+              <li>Company infrastructure</li>
+              <li>SSH inbound from MCP Server only</li>
+              <li>No AI agent runs on targets</li>
+            </ul>
+          </div>
+          <div class="arch-box" style="border-color: rgba(108,99,255,0.3);">
+            <div class="arch-box-title" style="color: var(--accent);">External Targets</div>
+            <ul class="arch-box-items">
+              <li>Customer webspace, VPS, servers</li>
+              <li>SSH inbound from MCP Server IP</li>
+              <li>Ephemeral keys, source-restricted</li>
             </ul>
           </div>
         </div>
@@ -968,42 +1010,85 @@
   <!-- 03 SECURITY ZONES -->
   <section>
     <h2><span class="num">03</span> Security Zones &amp; Network Topology</h2>
-    <p>The architecture defines <strong>four distinct security zones</strong> with strict, unidirectional data flow. Network policies enforce zone boundaries at the Kubernetes level.</p>
+    <p>The architecture defines <strong>four distinct security zones</strong> with strict, unidirectional data flow. Network policies enforce zone boundaries at the infrastructure level. Each zone has clearly defined trust boundaries and communication rules.</p>
 
     <div class="tools-grid">
       <div class="tool-card">
-        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-untrusted">Zone 1 &mdash; Untrusted</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-internet">Internet (Untrusted)</span></div>
         <div class="tool-card-header">
           <span class="tool-card-icon">&#9729;&#65039;</span>
           <span class="tool-card-name">Anthropic Cloud</span>
         </div>
-        <div class="tool-card-desc">Public AI inference. Receives only anonymized payloads. No SSH capability. No direct access to any internal zone. All data entering this zone is considered permanently disclosed.</div>
+        <div class="tool-card-desc">Public AI inference (Opus/Sonnet) and web search. Third-party infrastructure with no data control. All data entering this zone is considered <strong>permanently disclosed</strong>. Only anonymized context may reach this zone.</div>
       </div>
       <div class="tool-card">
-        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-dmz">Zone 2 &mdash; DMZ</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-wan">Company WAN (Isolated)</span></div>
         <div class="tool-card-header">
           <span class="tool-card-icon">&#128737;&#65039;</span>
-          <span class="tool-card-name">MCP Server</span>
+          <span class="tool-card-name">Claude Code Instance</span>
         </div>
-        <div class="tool-card-desc">Orchestration layer. Bridges untrusted and trusted zones. Enforces anonymization before any data crosses to Zone 1. Has controlled access to Zone 3 and Zone 4.</div>
+        <div class="tool-card-desc">Isolated runtime environment, only reachable via Company WAN. ACL-controlled user set. Runs high-level planning, task delegation, and research (via Anthropic API + web browsing). <strong>No direct SSH access to targets.</strong> Only allowed outbound connection: to the Trusted Zone via MCP protocol.</div>
       </div>
       <div class="tool-card">
-        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-trusted">Zone 3 &mdash; Trusted</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-trusted">Trusted Zone (Self-Hosted)</span></div>
         <div class="tool-card-header">
           <span class="tool-card-icon">&#129504;</span>
-          <span class="tool-card-name">Local AI + Storage</span>
+          <span class="tool-card-name">MCP Server + Local AI + Storage</span>
         </div>
-        <div class="tool-card-desc">MiniMax 2.5 and data stores. Full raw data access. Zero external network connectivity. Cannot initiate connections to Zone 1. All inference runs locally.</div>
+        <div class="tool-card-desc">Maximum isolation. Three separate instances (VMs, bare-metal, or K8s/Docker): <strong>MCP Server</strong> (SSH gateway, anonymization, web search), <strong>Local AI / MiniMax 2.5</strong> (raw data reasoning, no network), <strong>Storage</strong> (PostgreSQL + Qdrant, no network). Only accepts connections from Claude Code instance.</div>
       </div>
       <div class="tool-card">
-        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-isolated">Zone 4 &mdash; Isolated</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-targets">Targets (Variable)</span></div>
         <div class="tool-card-header">
           <span class="tool-card-icon">&#128421;&#65039;</span>
-          <span class="tool-card-name">Target Machines</span>
+          <span class="tool-card-name">Internal &amp; External Machines</span>
         </div>
-        <div class="tool-card-desc">Customer infrastructure. SSH inbound only from MCP server CIDR. No AI agent runs here. Firewall rules are immutable and managed externally.</div>
+        <div class="tool-card-desc">Internal company servers or external infrastructure (customer webspace, VPS, dedicated servers). SSH inbound only from MCP Server IP. No AI agent runs on targets. Firewall rules are immutable and managed externally.</div>
       </div>
     </div>
+
+    <h3>Component Responsibilities</h3>
+    <table class="infra-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Zone</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Anthropic Cloud</td>
+          <td><span class="tag tag-red">Internet</span></td>
+          <td>LLM inference (Opus/Sonnet), web search</td>
+        </tr>
+        <tr>
+          <td>Claude Code Instance</td>
+          <td><span class="tag tag-yellow">Company WAN</span></td>
+          <td>High-level planning, task delegation, research, user interface</td>
+        </tr>
+        <tr>
+          <td>MCP Server</td>
+          <td><span class="tag tag-green">Trusted Zone</span></td>
+          <td>SSH orchestration, anonymization, escalation, web search, logging</td>
+        </tr>
+        <tr>
+          <td>Local AI (MiniMax 2.5)</td>
+          <td><span class="tag tag-green">Trusted Zone</span> <span style="font-size: 0.75rem; color: var(--text-dim);">(separate instance)</span></td>
+          <td>Low-level reasoning on raw data, anonymization Layer 2</td>
+        </tr>
+        <tr>
+          <td>Storage (PG + Qdrant)</td>
+          <td><span class="tag tag-green">Trusted Zone</span> <span style="font-size: 0.75rem; color: var(--text-dim);">(separate instance)</span></td>
+          <td>Anonymized session logs, vector embeddings</td>
+        </tr>
+        <tr>
+          <td>Target Machines</td>
+          <td><span class="tag tag-purple">Variable</span></td>
+          <td>SSH endpoints &mdash; internal company servers or external customer infrastructure</td>
+        </tr>
+      </tbody>
+    </table>
 
     <h3>Network Policy Matrix</h3>
     <table class="infra-table">
@@ -1016,49 +1101,74 @@
       </thead>
       <tbody>
         <tr>
-          <td>Zone 1 &rarr; Zone 2 (MCP Server)</td>
-          <td>MCP over stdio / HTTP</td>
-          <td><span class="tag tag-green">ALLOW</span> anonymized responses only</td>
-        </tr>
-        <tr>
-          <td>Zone 2 &rarr; Zone 1 (Anthropic API)</td>
+          <td>Claude Code &rarr; Anthropic Cloud</td>
           <td>HTTPS :443</td>
-          <td><span class="tag tag-yellow">ALLOW</span> escalation payloads (post-anonymization)</td>
+          <td><span class="tag tag-green">ALLOW</span> API calls, web search</td>
         </tr>
         <tr>
-          <td>Zone 2 &rarr; Zone 3 (MiniMax)</td>
+          <td>Claude Code &rarr; MCP Server</td>
+          <td>MCP (JSON-RPC)</td>
+          <td><span class="tag tag-green">ALLOW</span> only allowed outbound to Trusted Zone</td>
+        </tr>
+        <tr>
+          <td>Claude Code &rarr; Targets</td>
+          <td>SSH / Any</td>
+          <td><span class="tag tag-red">DENY</span> no direct access</td>
+        </tr>
+        <tr>
+          <td>MCP Server &rarr; Claude Code</td>
+          <td>Response only</td>
+          <td><span class="tag tag-green">ALLOW</span> MCP responses</td>
+        </tr>
+        <tr>
+          <td>MCP Server &rarr; Local AI</td>
           <td>gRPC / HTTP :8080</td>
           <td><span class="tag tag-green">ALLOW</span> inference requests</td>
         </tr>
         <tr>
-          <td>Zone 2 &rarr; Zone 4 (Targets)</td>
+          <td>MCP Server &rarr; Storage</td>
+          <td>PostgreSQL / HTTP</td>
+          <td><span class="tag tag-green">ALLOW</span> logging, embeddings</td>
+        </tr>
+        <tr>
+          <td>MCP Server &rarr; Targets</td>
           <td>SSH :22</td>
           <td><span class="tag tag-yellow">ALLOW</span> ephemeral key only</td>
         </tr>
         <tr>
-          <td>Zone 3 &rarr; Zone 1 (Anthropic)</td>
+          <td>MCP Server &rarr; Internet</td>
+          <td>HTTPS :443</td>
+          <td><span class="tag tag-yellow">ALLOW</span> web search for research</td>
+        </tr>
+        <tr>
+          <td>Local AI &rarr; Internet</td>
           <td>Any</td>
-          <td><span class="tag tag-red">DENY</span> no external access</td>
+          <td><span class="tag tag-red">DENY</span> air-gapped</td>
         </tr>
         <tr>
-          <td>Zone 3 &rarr; Zone 4 (Targets)</td>
+          <td>Storage &rarr; Internet</td>
           <td>Any</td>
-          <td><span class="tag tag-red">DENY</span> no direct access</td>
+          <td><span class="tag tag-red">DENY</span> air-gapped</td>
         </tr>
         <tr>
-          <td>Zone 4 &rarr; Any</td>
-          <td>SSH inbound</td>
-          <td><span class="tag tag-red">DENY ALL</span> except Zone 2 CIDR</td>
+          <td>Targets &rarr; MCP Server</td>
+          <td>Any</td>
+          <td><span class="tag tag-red">DENY</span> SSH is outbound-only from MCP</td>
         </tr>
         <tr>
-          <td>Zone 1 &rarr; Zone 4 (Targets)</td>
-          <td>SSH / Any</td>
-          <td><span class="tag tag-red">DENY</span> firewalled at network level</td>
+          <td>Internet &rarr; Company WAN</td>
+          <td>Any</td>
+          <td><span class="tag tag-red">DENY</span> WAN-only access</td>
+        </tr>
+        <tr>
+          <td>Internet &rarr; Trusted Zone</td>
+          <td>Any</td>
+          <td><span class="tag tag-red">DENY</span> no inbound</td>
         </tr>
       </tbody>
     </table>
 
-    <h3>Kubernetes NetworkPolicy (Zone 3 &mdash; MiniMax)</h3>
+    <h3>Kubernetes NetworkPolicy (Trusted Zone &mdash; Local AI)</h3>
     <div class="code-block"><span class="keyword">apiVersion:</span> networking.k8s.io/v1
 <span class="keyword">kind:</span> NetworkPolicy
 <span class="keyword">metadata:</span>
@@ -1068,6 +1178,7 @@
   <span class="keyword">podSelector:</span>
     <span class="keyword">matchLabels:</span>
       <span class="keyword">app:</span> minimax
+      <span class="keyword">zone:</span> trusted
   <span class="keyword">policyTypes:</span> [Ingress, Egress]
   <span class="keyword">ingress:</span>
     - <span class="keyword">from:</span>
@@ -1082,6 +1193,29 @@
             <span class="keyword">matchLabels:</span>
               <span class="keyword">app:</span> mcp-server    <span class="comment"># Can only respond to MCP server</span>
     <span class="comment"># No egress to 0.0.0.0/0 — completely air-gapped from internet</span></div>
+
+    <h3>Kubernetes NetworkPolicy (Trusted Zone &mdash; Storage)</h3>
+    <div class="code-block"><span class="keyword">apiVersion:</span> networking.k8s.io/v1
+<span class="keyword">kind:</span> NetworkPolicy
+<span class="keyword">metadata:</span>
+  <span class="keyword">name:</span> storage-isolation
+  <span class="keyword">namespace:</span> ssh-mcp
+<span class="keyword">spec:</span>
+  <span class="keyword">podSelector:</span>
+    <span class="keyword">matchLabels:</span>
+      <span class="keyword">zone:</span> trusted
+      <span class="keyword">role:</span> storage          <span class="comment"># Matches PostgreSQL and Qdrant pods</span>
+  <span class="keyword">policyTypes:</span> [Ingress, Egress]
+  <span class="keyword">ingress:</span>
+    - <span class="keyword">from:</span>
+        - <span class="keyword">podSelector:</span>
+            <span class="keyword">matchLabels:</span>
+              <span class="keyword">app:</span> mcp-server    <span class="comment"># Only MCP server can write/read</span>
+      <span class="keyword">ports:</span>
+        - <span class="keyword">port:</span> 5432           <span class="comment"># PostgreSQL</span>
+        - <span class="keyword">port:</span> 6333           <span class="comment"># Qdrant HTTP</span>
+        - <span class="keyword">port:</span> 6334           <span class="comment"># Qdrant gRPC</span>
+  <span class="keyword">egress:</span> []                     <span class="comment"># No egress — completely air-gapped</span></div>
   </section>
 
   <!-- 04 SSH KEY LIFECYCLE -->
@@ -1095,7 +1229,7 @@
           <div class="step-icon">&#128477;&#65039;</div>
           <div class="step-content">
             <div class="step-title">1. Key Request</div>
-            <div class="step-detail">Main Claude calls the MCP tool <code>ssh_connect</code> with target host and user. The MCP server generates an Ed25519 keypair in memory.</div>
+            <div class="step-detail">Claude Code (Company WAN) calls the MCP tool <code>ssh_connect</code> with target host and user. The MCP server generates an Ed25519 keypair in memory.</div>
             <span class="step-tech">Ed25519</span>
             <span class="step-tech">In-memory only</span>
           </div>
@@ -1395,7 +1529,7 @@ STRIPE_SECRET=<span class="string">[APIKEY_REDACTED]</span>
     </table>
 
     <div class="info-box">
-      <strong>Pipeline Guarantee:</strong> If a canary token survives both anonymization layers, the entire pipeline halts immediately. The current session is quarantined. An alert is sent to the operations team. No data leaves the DMZ until the pipeline is verified and restored. This provides <strong>continuous, automated confidence</strong> in the anonymization quality.
+      <strong>Pipeline Guarantee:</strong> If a canary token survives both anonymization layers, the entire pipeline halts immediately. The current session is quarantined. An alert is sent to the operations team. No data leaves the Trusted Zone until the pipeline is verified and restored. This provides <strong>continuous, automated confidence</strong> in the anonymization quality.
     </div>
   </section>
 
@@ -1740,8 +1874,8 @@ DB_PASSWORD=real_password_here
 
   <!-- 11 KUBERNETES -->
   <section>
-    <h2><span class="num">11</span> Kubernetes Deployment</h2>
-    <p>Single-namespace deployment with strict resource isolation, network policies, and immutable infrastructure.</p>
+    <h2><span class="num">11</span> Infrastructure Deployment</h2>
+    <p>The Trusted Zone runs as a single-namespace Kubernetes deployment with strict resource isolation, network policies, and immutable infrastructure. The Claude Code instance runs separately in the Company WAN. All components can alternatively be deployed as VMs or bare-metal servers.</p>
 
     <table class="infra-table">
       <thead>
@@ -1888,6 +2022,14 @@ DB_PASSWORD=real_password_here
       <li>Distroless images and image signing (cosign)</li>
       <li>HSM-backed CA key storage</li>
       <li>Penetration testing and DSGVO compliance audit</li>
+    </ul>
+
+    <h3>Phase 5 &mdash; Onboarding &amp; Operations</h3>
+    <ul class="next-list">
+      <li>Claude Code instance hardening and Company WAN access control</li>
+      <li>External target onboarding workflow (customer VPS/server SSH setup)</li>
+      <li>Certificate authority key rotation automation</li>
+      <li>Network policy configuration per deployment type (K8s vs. VM vs. bare-metal)</li>
     </ul>
   </section>
 
