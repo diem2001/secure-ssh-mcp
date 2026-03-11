@@ -976,34 +976,21 @@
               <ul class="arch-subbox-items">
                 <li>Runs Claude Agent SDK with MiniMax 2.5 as inference backend</li>
                 <li>All Anthropic API connections <strong style="color: var(--accent3);">blocked</strong> &mdash; reasoning is 100% on-premises</li>
-                <li><strong>Agent tools available:</strong> SSH (via gateway), Bash, Read/Write/Edit, Glob, Grep, Chrome headless + Playwright</li>
+                <li><strong>Agent tools:</strong> Bash, Read/Write/Edit, Glob, Grep, Chrome headless + Playwright</li>
+                <li>SSH runs via Bash tool &mdash; <code>ssh user@target -i key</code> &mdash; no separate gateway needed</li>
+                <li>Target, user, and key (from Platform API) are known to the agent context</li>
                 <li>Playwright enables website verification, visual issue validation, screenshot-based debugging</li>
-                <li>Same tool capabilities as Claude Code in Tool Intranet &mdash; but isolated to local LLM only</li>
+                <li><strong>Escalation logic lives here:</strong> agent decides locally whether to resolve or anonymize + escalate to Claude Code in Tool Intranet</li>
+                <li>Web search available for research during local resolution</li>
               </ul>
             </div>
-            <div class="arch-subbox">
-              <div class="arch-subbox-title" style="color: var(--accent2);">SSH Gateway</div>
+            <div class="arch-subbox" style="grid-column: 1 / -1;">
+              <div class="arch-subbox-title" style="color: var(--accent2);">Anonymization Pipeline</div>
               <ul class="arch-subbox-items">
-                <li>Platform API key provisioning</li>
-                <li>Session management</li>
-                <li>Command execution</li>
-              </ul>
-            </div>
-            <div class="arch-subbox">
-              <div class="arch-subbox-title" style="color: var(--accent2);">Anonymization</div>
-              <ul class="arch-subbox-items">
-                <li>Layer 1: Regex (deterministic)</li>
-                <li>Layer 2: Local AI (contextual)</li>
+                <li>Layer 1: Regex-based (deterministic, &lt;1ms)</li>
+                <li>Layer 2: Local AI / MiniMax (contextual)</li>
                 <li>Canary token validation</li>
-                <li style="color: var(--accent3);">Source code = customer IP &mdash; never transmitted</li>
-              </ul>
-            </div>
-            <div class="arch-subbox">
-              <div class="arch-subbox-title" style="color: var(--accent2);">Escalation Logic</div>
-              <ul class="arch-subbox-items">
-                <li>Local-first resolution via own Agent SDK</li>
-                <li>Anonymize + escalate to Claude Code</li>
-                <li>Web search for research</li>
+                <li style="color: var(--accent3);">Source code = customer IP &mdash; never transmitted outside Trusted Zone</li>
               </ul>
             </div>
           </div>
@@ -1127,7 +1114,7 @@
         <tr>
           <td>MCP Server</td>
           <td><span class="tag tag-green">Trusted Zone</span></td>
-          <td>Own Agent SDK (local LLM only, Anthropic blocked), SSH orchestration, anonymization, escalation, headless browser (Playwright), web search, logging</td>
+          <td>Own Claude Code (Agent SDK, local LLM only, Anthropic blocked), SSH via Bash, anonymization, escalation, Playwright browser, web search, logging</td>
         </tr>
         <tr>
           <td>Local AI (MiniMax 2.5)</td>
@@ -2018,13 +2005,6 @@ DB_PASSWORD=real_password_here
           <td>1</td>
           <td>2Gi / 1 CPU</td>
           <td><span class="tag tag-yellow">Qdrant 1.x</span></td>
-        </tr>
-        <tr>
-          <td>Platform API Gateway</td>
-          <td>Deployment</td>
-          <td>2 (HA)</td>
-          <td>128Mi / 0.25 CPU</td>
-          <td><span class="tag tag-green">Node.js</span> <span class="tag tag-purple">Hosting API</span></td>
         </tr>
         <tr>
           <td>Purge Worker</td>
