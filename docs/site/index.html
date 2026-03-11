@@ -1001,6 +1001,7 @@
                 <li>Layer 2: Local AI / MiniMax (contextual)</li>
                 <li>Canary token validation</li>
                 <li style="color: var(--accent3);">Source code = customer IP &mdash; never transmitted outside Trusted Zone</li>
+                <li style="color: var(--accent3);"><strong>Hard rule:</strong> MCP Server tool responses never contain program code, scripts, or file contents from customer systems</li>
               </ul>
             </div>
           </div>
@@ -1584,7 +1585,9 @@ MCP Server: Executes fix locally on db-replica-02</div>
     <p>Every piece of data passes through two independent anonymization layers before leaving the self-hosted infrastructure. Applied at two trigger points: <strong>(1) before escalation to Claude</strong> and <strong>(2) before writing to persistent logs</strong>.</p>
 
     <div class="warning-box">
-      <strong>Source Code Protection &mdash; Customer IP:</strong> Customer source code is intellectual property and must <strong>never</strong> be transmitted outside the Trusted Zone. The Local AI (MiniMax 2.5) may analyze source code locally for debugging, but it must never include source code snippets in escalation packages sent to Claude Code. The anonymization pipeline treats all source code content as <code>[SOURCE_CODE_REDACTED]</code>. Only structural descriptions ("PHP file with syntax error on line 42", "missing import statement") may leave the Trusted Zone.
+      <strong>Source Code Protection &mdash; Customer IP:</strong> Customer source code is intellectual property and must <strong>never</strong> be transmitted outside the Trusted Zone. This is enforced at two levels:<br><br>
+      <strong>1. MCP Server Tool Responses (hard rule):</strong> The SSH MCP Server must <strong>never</strong> return program code, scripts, configuration file contents, or any file content from customer systems in its tool responses to Claude Code. Only structured metadata (error types, line numbers, service states, log summaries) may be returned. This is a design constraint of the MCP tool interface itself &mdash; not just the anonymization pipeline.<br><br>
+      <strong>2. Anonymization Pipeline (defense in depth):</strong> As a second safeguard, the dual-layer anonymization pipeline replaces all source code content with <code>[SOURCE_CODE_REDACTED]</code>. The Local AI (MiniMax 2.5) may analyze source code locally for debugging, but escalation packages to Claude Code contain only structural descriptions ("PHP syntax error on line 42", "missing import statement"). This applies to all file types: <code>.php</code>, <code>.js</code>, <code>.py</code>, <code>.java</code>, <code>.html</code>, <code>.css</code>, config files with custom logic, etc.
     </div>
 
     <div class="two-col">
