@@ -688,50 +688,51 @@
 
     <div class="arch-diagram">
 <span class="hl">ZONE: UNTRUSTED (Anthropic Infrastructure)</span>
-&boxdr;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxdl;
-&boxv;  <span class="hl">Claude Opus / Sonnet</span>                               &boxv;
-&boxv;  &bull; High-level reasoning &amp; task planning              &boxv;
-&boxv;  &bull; Receives only anonymized context                  &boxv;
-&boxv;  &bull; Issues SSH tasks via MCP tool calls                &boxv;
-&boxv;  &bull; No direct network access to target machines       &boxv;
-&boxur;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxul;
-                         &boxv;
-                         &boxv; <span class="hl4">MCP Protocol (JSON-RPC over stdio)</span>
-                         &boxv; <span class="hl2">Only anonymized payloads cross this boundary</span>
-                         &boxv;
++----------------------------------------------------------+
+|  <span class="hl">Claude Opus / Sonnet</span>                                     |
+|  - High-level reasoning &amp; task planning                  |
+|  - Receives only anonymized context                      |
+|  - Issues SSH tasks via MCP tool calls                   |
+|  - No direct network access to target machines           |
++----------------------------------------------------------+
+                         |
+                         | <span class="hl4">MCP Protocol (JSON-RPC over stdio)</span>
+                         | <span class="hl2">Only anonymized payloads cross this boundary</span>
+                         |
 <span class="hl4">ZONE: DMZ (Self-Hosted, Network-Isolated)</span>
-&boxdr;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxdl;
-&boxv;  <span class="hl4">MCP Server</span> (Node.js + Claude Agent SDK)             &boxv;
-&boxv;  &boxdr;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxdl; &boxdr;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxdl;      &boxv;
-&boxv;  &boxv; <span class="hl2">SSH Gateway</span>        &boxv; &boxv; <span class="hl2">Anonymization</span>    &boxv;      &boxv;
-&boxv;  &boxv; &bull; Key validation    &boxv; &boxv; &bull; Layer 1: Regex  &boxv;      &boxv;
-&boxv;  &boxv; &bull; Session mgmt     &boxv; &boxv; &bull; Layer 2: LLM    &boxv;      &boxv;
-&boxv;  &boxv; &bull; Command exec     &boxv; &boxv; &bull; Canary tokens   &boxv;      &boxv;
-&boxv;  &boxur;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxul; &boxur;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxul;      &boxv;
-&boxv;  &boxdr;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxdl; &boxdr;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxdl;      &boxv;
-&boxv;  &boxv; <span class="hl2">Escalation Logic</span> &boxv; &boxv; <span class="hl2">Session Logger</span>   &boxv;      &boxv;
-&boxv;  &boxv; &bull; Local-first      &boxv; &boxv; &bull; Anonymized I/O  &boxv;      &boxv;
-&boxv;  &boxv; &bull; Anon + escalate  &boxv; &boxv; &bull; Command audit   &boxv;      &boxv;
-&boxv;  &boxv; &bull; Result assembly  &boxv; &boxv; &bull; Cost tracking   &boxv;      &boxv;
-&boxv;  &boxur;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxul; &boxur;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxul;      &boxv;
-&boxur;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxul;
-          &boxv;                              &boxv;
-          &boxv; <span class="hl2">gRPC / HTTP</span>                  &boxv; <span class="hl3">SSH (ephemeral key)</span>
-          &boxv;                              &boxv;
++----------------------------------------------------------+
+|  <span class="hl4">MCP Server</span> (Node.js + Claude Agent SDK)                  |
+|                                                          |
+|  +--------------------+ +--------------------+           |
+|  | <span class="hl2">SSH Gateway</span>        | | <span class="hl2">Anonymization</span>      |           |
+|  | - Key validation   | | - Layer 1: Regex   |           |
+|  | - Session mgmt     | | - Layer 2: LLM     |           |
+|  | - Command exec     | | - Canary tokens    |           |
+|  +--------------------+ +--------------------+           |
+|  +--------------------+ +--------------------+           |
+|  | <span class="hl2">Escalation Logic</span>  | | <span class="hl2">Session Logger</span>     |           |
+|  | - Local-first      | | - Anonymized I/O   |           |
+|  | - Anon + escalate  | | - Command audit    |           |
+|  | - Result assembly  | | - Cost tracking    |           |
+|  +--------------------+ +--------------------+           |
++----------------------------------------------------------+
+          |                              |
+          | <span class="hl2">gRPC / HTTP</span>                  | <span class="hl3">SSH (ephemeral key)</span>
+          |                              |
 <span class="hl2">ZONE: TRUSTED (Self-Hosted)</span>            <span class="hl3">ZONE: ISOLATED (Customer Infra)</span>
-&boxdr;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxdl;     &boxdr;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxdl;
-&boxv; <span class="hl2">MiniMax 2.5</span>          &boxv;     &boxv; <span class="hl3">Target Machines</span>       &boxv;
-&boxv; &bull; Self-hosted LLM    &boxv;     &boxv; &bull; SSH port 22 only    &boxv;
-&boxv; &bull; Raw data access    &boxv;     &boxv; &bull; Firewall: MCP IP    &boxv;
-&boxv; &bull; No external net    &boxv;     &boxv; &bull; No AI agent access  &boxv;
-&boxv; &bull; No logging to ext  &boxv;     &boxv; &bull; Customer workloads  &boxv;
-&boxur;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxul;     &boxur;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxul;
-&boxdr;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxdl;
-&boxv; <span class="hl2">PostgreSQL + Qdrant</span> &boxv;
-&boxv; &bull; Anonymized logs    &boxv;
-&boxv; &bull; Vector embeddings  &boxv;
-&boxv; &bull; Auto-purge raw     &boxv;
-&boxur;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxh;&boxul;</div>
++------------------------+     +-------------------------+
+| <span class="hl2">MiniMax 2.5</span>            |     | <span class="hl3">Target Machines</span>          |
+| - Self-hosted LLM      |     | - SSH port 22 only       |
+| - Raw data access      |     | - Firewall: MCP IP       |
+| - No external net      |     | - No AI agent access     |
+| - No logging to ext    |     | - Customer workloads     |
++------------------------+     +-------------------------+
++------------------------+
+| <span class="hl2">PostgreSQL + Qdrant</span>   |
+| - Anonymized logs      |
+| - Vector embeddings    |
+| - Auto-purge raw       |
++------------------------+</div>
   </section>
 
   <!-- 03 SECURITY ZONES -->
