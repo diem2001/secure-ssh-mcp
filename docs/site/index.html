@@ -1008,13 +1008,23 @@
             </div>
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
           <div class="arch-box" style="border-color: rgba(0,212,170,0.3);">
             <div class="arch-box-title" style="color: var(--accent2);">Local AI &mdash; MiniMax 2.5 <span style="color: var(--text-dim); font-weight: 400;">(Separate Instance)</span></div>
             <ul class="arch-box-items">
               <li>Self-hosted LLM inference</li>
               <li>Raw data access for local reasoning</li>
-              <li>Anonymization Layer 2</li>
+              <li>Anonymization Layer 2 (contextual)</li>
+              <li>No external network access</li>
+            </ul>
+          </div>
+          <div class="arch-box" style="border-color: rgba(108,99,255,0.3);">
+            <div class="arch-box-title" style="color: var(--accent);">Presidio <span style="color: var(--text-dim); font-weight: 400;">(Separate Instance)</span></div>
+            <ul class="arch-box-items">
+              <li>Microsoft open-source PII detection</li>
+              <li>Anonymization Layer 1 (regex + NLP + NER)</li>
+              <li>Dockerized REST API</li>
+              <li>Custom recognizers for SSH keys, JWT, etc.</li>
               <li>No external network access</li>
             </ul>
           </div>
@@ -1141,7 +1151,12 @@
         <tr>
           <td>Local AI (MiniMax 2.5)</td>
           <td><span class="tag tag-green">Trusted Zone</span> <span style="font-size: 0.75rem; color: var(--text-dim);">(separate instance)</span></td>
-          <td>Low-level reasoning on raw data, anonymization Layer 2</td>
+          <td>Low-level reasoning on raw data, anonymization Layer 2 (contextual)</td>
+        </tr>
+        <tr>
+          <td>Presidio</td>
+          <td><span class="tag tag-green">Trusted Zone</span> <span style="font-size: 0.75rem; color: var(--text-dim);">(separate instance)</span></td>
+          <td>Anonymization Layer 1 (deterministic): PII detection via regex, NLP, NER + custom recognizers. Dockerized REST API, no external network access.</td>
         </tr>
         <tr>
           <td>S3 Key Store</td>
@@ -1259,6 +1274,19 @@
           <td>Any</td>
           <td><span class="tag tag-red">DENY</span></td>
           <td>No external network access &mdash; Trusted Zone only</td>
+        </tr>
+        <tr class="group-header"><td colspan="4" style="color: var(--accent);">Presidio (Trusted Zone)</td></tr>
+        <tr>
+          <td>MCP Server &rarr; Presidio</td>
+          <td>HTTP :3535 (REST API)</td>
+          <td><span class="tag tag-green">ALLOW</span></td>
+          <td>Anonymization Layer 1 &mdash; PII detection and redaction requests</td>
+        </tr>
+        <tr>
+          <td>Presidio &rarr; Internet</td>
+          <td>Any</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>No external network access &mdash; only accepts requests from MCP Server</td>
         </tr>
         <tr class="group-header"><td colspan="4" style="color: var(--accent2);">Local AI (Trusted Zone)</td></tr>
         <tr>
