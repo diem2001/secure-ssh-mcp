@@ -2066,34 +2066,35 @@ DB_PASSWORD=real_password_here
         </tr>
         <tr>
           <td>Storage Limitation (Art. 5(1)(e))</td>
-          <td>Raw logs purged after embedding (&le;5 min)</td>
+          <td>Raw logs purged after embedding (&le;5 min) &mdash; applies to both SSH command logs and Agent SDK reasoning logs</td>
           <td>Purge lag monitoring, audit trail</td>
         </tr>
         <tr>
           <td>Data Minimization (Art. 5(1)(c))</td>
-          <td>Only anonymized embeddings retained long-term</td>
-          <td>Schema constraints (JSONB fields nulled)</td>
+          <td>Only anonymized embeddings retained long-term. SSH keys ephemeral (S3 auto-expire). Reasoning text, tool I/O, and command output all nulled after embedding.</td>
+          <td>Schema constraints (JSONB + text fields nulled)</td>
         </tr>
         <tr>
           <td>Security of Processing (Art. 32)</td>
-          <td>Platform-managed SSH keys (15min TTL), network isolation, K8s policies</td>
-          <td>Penetration testing, NetworkPolicy audit</td>
+          <td>SSH keys via S3 Key Store (never in Claude Code context), platform-enforced TTL, zone isolation, K8s network policies</td>
+          <td>Penetration testing, NetworkPolicy audit, S3 access logs</td>
         </tr>
         <tr>
           <td>Access Control</td>
-          <td>RBAC on all data stores, audit logging</td>
-          <td>K8s RBAC review, access log analysis</td>
+          <td>RBAC on all data stores, audit logging, S3 IAM policies (write-only / read-only per service)</td>
+          <td>K8s RBAC review, S3 IAM audit, access log analysis</td>
         </tr>
         <tr>
           <td>Data Processing Agreement</td>
-          <td>Required with Anthropic only if anonymization fails</td>
+          <td>Required with Anthropic only if anonymization fails. Applies to both log streams (SSH commands + Agent SDK reasoning).</td>
           <td>Canary system provides continuous proof</td>
         </tr>
       </tbody>
     </table>
 
     <div class="warning-box">
-      <strong>Legal Boundary &mdash; Anonymization vs. Pseudonymization:</strong> Under DSGVO, if re-identification is theoretically possible, data remains "personal data" and falls under full regulation. True anonymization &mdash; where the original data subject cannot be identified even with auxiliary information &mdash; removes the data from DSGVO scope entirely. The dual-layer pipeline with canary validation is designed to meet the higher "true anonymization" bar. The burden of proof lies with the data controller.
+      <strong>Legal Boundary &mdash; Anonymization vs. Pseudonymization:</strong> Under DSGVO, if re-identification is theoretically possible, data remains &ldquo;personal data&rdquo; and falls under full regulation. True anonymization &mdash; where the original data subject cannot be identified even with auxiliary information &mdash; removes the data from DSGVO scope entirely. The dual-layer pipeline with canary validation is designed to meet the higher &ldquo;true anonymization&rdquo; bar. The burden of proof lies with the data controller.<br><br>
+      <strong>Scope of anonymization obligation:</strong> This applies to <strong>both</strong> log streams &mdash; SSH command logs (target output) and Agent SDK reasoning logs (MiniMax reasoning, tool call chains, escalation decisions). MiniMax reasoning text may contain contextual references to data seen during the session. Both streams must pass through the full dual-layer pipeline before persistence, and both are subject to the ingest &rarr; embed &rarr; purge lifecycle. The S3 Key Store is exempt (no personal data &mdash; only ephemeral SSH keys with auto-expire), but S3 access logs must be retained for audit purposes.
     </div>
   </section>
 
