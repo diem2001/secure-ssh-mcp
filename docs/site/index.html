@@ -364,6 +364,8 @@
 
   .infra-table td { color: var(--text-dim); }
   .infra-table td:first-child { color: var(--text); font-weight: 500; }
+  .infra-table td:nth-child(2) { white-space: nowrap; }
+  .infra-table td:nth-child(3) { white-space: nowrap; }
 
   .infra-table .group-header td {
     padding-top: 2rem;
@@ -997,7 +999,7 @@
             <div class="arch-subbox" style="grid-column: 1 / -1;">
               <div class="arch-subbox-title" style="color: var(--accent2);">Anonymization Pipeline</div>
               <ul class="arch-subbox-items">
-                <li>Layer 1: Regex-based (deterministic, &lt;1ms)</li>
+                <li>Layer 1: Microsoft Presidio (regex + NLP + NER)</li>
                 <li>Layer 2: Local AI / MiniMax (contextual)</li>
                 <li>Canary token validation</li>
                 <li style="color: var(--accent3);">Source code = customer IP &mdash; never transmitted outside Trusted Zone</li>
@@ -1592,19 +1594,22 @@ MCP Server: Executes fix locally on db-replica-02</div>
 
     <div class="two-col">
       <div class="tool-card">
-        <div style="margin-bottom: 0.75rem;"><span class="layer-badge layer-1">Layer 1 &mdash; Rule-Based (Deterministic)</span></div>
+        <div style="margin-bottom: 0.75rem;"><span class="layer-badge layer-1">Layer 1 &mdash; Microsoft Presidio (Deterministic)</span></div>
         <div class="tool-card-desc" style="font-size: 0.82rem; line-height: 1.6;">
-          <strong>Execution:</strong> &lt;1ms per payload<br>
+          <strong>Engine:</strong> <a href="https://github.com/microsoft/presidio" style="color: var(--accent);">Microsoft Presidio</a> (open-source, Dockerized REST API)<br>
+          <strong>Detection:</strong> Regex + NLP + Named Entity Recognition<br>
           <strong>Coverage:</strong> ~85% of sensitive patterns<br><br>
-          <strong>Pattern categories:</strong><br>
+          <strong>Built-in recognizers:</strong><br>
           &bull; IPv4/IPv6 addresses &rarr; <code>[IP_REDACTED]</code><br>
           &bull; Email addresses &rarr; <code>[EMAIL_REDACTED]</code><br>
+          &bull; Credit cards, IBAN, SSN &rarr; <code>[FINANCIAL_REDACTED]</code><br>
+          &bull; Person names (NLP/NER) &rarr; <code>[NAME_REDACTED]</code><br>
+          &bull; Phone numbers &rarr; <code>[PHONE_REDACTED]</code><br><br>
+          <strong>Custom recognizers (domain-specific):</strong><br>
           &bull; API keys (AWS, GCP, Stripe, etc.) &rarr; <code>[APIKEY_REDACTED]</code><br>
           &bull; Connection strings &rarr; <code>[CONNSTR_REDACTED]</code><br>
           &bull; Private key material &rarr; <code>[PRIVKEY_REDACTED]</code><br>
           &bull; JWT tokens &rarr; <code>[JWT_REDACTED]</code><br>
-          &bull; Basic auth headers &rarr; <code>[AUTH_REDACTED]</code><br>
-          &bull; File paths matching sensitive patterns<br>
           &bull; Known file formats (.env, wp-config.php, etc.)
         </div>
       </div>
@@ -2128,6 +2133,13 @@ DB_PASSWORD=real_password_here
           <td>1&ndash;4 (HPA)</td>
           <td><span class="tag tag-yellow">Self-hosted LLM</span></td>
           <td>Local LLM inference for the Agent SDK. Analyzes raw SSH output, classifies content, drives tool decisions. Anonymization Layer 2 (contextual). No external network access.</td>
+        </tr>
+        <tr>
+          <td>Presidio</td>
+          <td>Deployment</td>
+          <td>2 (HA)</td>
+          <td><span class="tag tag-purple">Python</span> <span class="tag tag-green">REST API</span></td>
+          <td>Microsoft open-source PII detection and anonymization. Anonymization Layer 1 (rule-based): regex, NLP, Named Entity Recognition + custom recognizers for SSH keys, connection strings, WordPress patterns. Dockerized REST API.</td>
         </tr>
         <tr>
           <td>S3 Key Store</td>
