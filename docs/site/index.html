@@ -966,7 +966,7 @@
       <!-- Zone: Trusted -->
       <div class="arch-zone">
         <span class="arch-zone-label zone-trusted">Trusted Zone (Self-Hosted, Maximum Isolation)</span>
-        <p style="font-size: 0.75rem; color: var(--text-dim); margin: 0 0 0.75rem;">Each component runs as a separate instance &mdash; VMs, bare-metal, or Kubernetes/Docker resources</p>
+        <p style="font-size: 0.75rem; color: var(--text-dim); margin: 0 0 0.75rem;">Each component runs as a separate instance &mdash; hosting model is your choice (VMs, bare-metal, K8s, Docker, etc.)</p>
         <div class="arch-box" style="border-color: rgba(0,212,170,0.3); margin-bottom: 0.75rem;">
           <div class="arch-box-title" style="color: var(--accent2);">MCP Server <span style="color: var(--text-dim); font-weight: 400;">(Instance: VM / K8s / Docker)</span></div>
           <div class="arch-box-subtitle">Only accepts connections from Claude Code instance &mdash; <strong style="color: var(--accent3);">Anthropic API blocked</strong></div>
@@ -1079,7 +1079,7 @@
           <span class="tool-card-icon">&#129504;</span>
           <span class="tool-card-name">MCP Server + Local AI + Storage</span>
         </div>
-        <div class="tool-card-desc">Maximum isolation. Three separate instances (VMs, bare-metal, or K8s/Docker): <strong>MCP Server</strong> (own Agent SDK, SSH gateway, anonymization &mdash; <strong style="color: var(--accent3);">Anthropic API blocked</strong>), <strong>Local AI / MiniMax 2.5</strong> (raw data reasoning, no network), <strong>Storage</strong> (PostgreSQL + Qdrant, no network). MCP Server&rsquo;s Agent SDK communicates exclusively with the Local LLM.</div>
+        <div class="tool-card-desc">Maximum isolation. Three separate instances (hosting model is your choice &mdash; VMs, bare-metal, K8s, Docker, etc.): <strong>MCP Server</strong> (own Claude Code via Agent SDK, Anthropic API <strong style="color: var(--accent3);">blocked</strong>), <strong>Local AI / MiniMax 2.5</strong> (raw data reasoning, no network), <strong>Storage</strong> (PostgreSQL + Qdrant, no network). MCP Server&rsquo;s Agent SDK communicates exclusively with the Local LLM.</div>
       </div>
       <div class="tool-card">
         <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-targets">Targets (Variable)</span></div>
