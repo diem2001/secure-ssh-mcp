@@ -1135,84 +1135,117 @@
     </table>
 
     <h3>Network Policy Matrix</h3>
+    <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1rem;">Default posture: <strong>deny all</strong>, then explicitly allow. Grouped by source component.</p>
     <table class="infra-table">
       <thead>
         <tr>
           <th>Source &rarr; Destination</th>
-          <th>Protocol</th>
+          <th>Protocol / Ports</th>
           <th>Policy</th>
+          <th>Purpose</th>
         </tr>
       </thead>
       <tbody>
+        <tr><td colspan="4" style="color: var(--accent4); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">Claude Code (Tool Intranet Tech Limited)</td></tr>
         <tr>
-          <td>Claude Code &rarr; Anthropic Cloud</td>
+          <td>Claude Code &rarr; Internet</td>
+          <td>HTTPS, HTTP &mdash; all ports outbound</td>
+          <td><span class="tag tag-green">ALLOW</span></td>
+          <td>Web research, documentation lookup, package registries &mdash; unrestricted outbound (no port blocking feasible for general web research)</td>
+        </tr>
+        <tr>
+          <td>Claude Code &rarr; Anthropic API</td>
           <td>HTTPS :443</td>
-          <td><span class="tag tag-green">ALLOW</span> API calls, web search</td>
+          <td><span class="tag tag-green">ALLOW</span></td>
+          <td>LLM inference (Opus/Sonnet) &mdash; subset of general internet access</td>
         </tr>
         <tr>
           <td>Claude Code &rarr; MCP Server</td>
           <td>MCP (JSON-RPC)</td>
-          <td><span class="tag tag-green">ALLOW</span> only allowed outbound to Trusted Zone</td>
+          <td><span class="tag tag-green">ALLOW</span></td>
+          <td>Only connection into the Trusted Zone &mdash; task delegation to MCP Server</td>
         </tr>
         <tr>
           <td>Claude Code &rarr; Targets</td>
           <td>SSH / Any</td>
-          <td><span class="tag tag-red">DENY</span> no direct access</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>No direct SSH &mdash; all target access must go through MCP Server</td>
         </tr>
+        <tr><td colspan="4" style="color: var(--accent2); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">MCP Server (Trusted Zone)</td></tr>
         <tr>
           <td>MCP Server &rarr; Claude Code</td>
-          <td>Response only</td>
-          <td><span class="tag tag-green">ALLOW</span> MCP responses</td>
-        </tr>
-        <tr>
-          <td>MCP Server &rarr; Local AI</td>
-          <td>gRPC / HTTP :8080</td>
-          <td><span class="tag tag-green">ALLOW</span> inference requests</td>
+          <td>MCP response</td>
+          <td><span class="tag tag-green">ALLOW</span></td>
+          <td>Return anonymized results back to Claude Code</td>
         </tr>
         <tr>
           <td>MCP Server &rarr; Storage</td>
-          <td>PostgreSQL / HTTP</td>
-          <td><span class="tag tag-green">ALLOW</span> logging, embeddings</td>
+          <td>PostgreSQL :5432, Qdrant :6333/:6334</td>
+          <td><span class="tag tag-green">ALLOW</span></td>
+          <td>Session logging, vector embeddings</td>
         </tr>
         <tr>
           <td>MCP Server &rarr; Targets</td>
           <td>SSH :22</td>
-          <td><span class="tag tag-yellow">ALLOW</span> ephemeral key only</td>
+          <td><span class="tag tag-yellow">ALLOW</span></td>
+          <td>SSH via Bash tool &mdash; platform-provisioned or customer-provided key, also used for Git over SSH</td>
+        </tr>
+        <tr>
+          <td>MCP Server &rarr; Internet (Web)</td>
+          <td>HTTP :80, HTTPS :443</td>
+          <td><span class="tag tag-yellow">ALLOW</span></td>
+          <td>Web search, Playwright browser verification, Git clone/pull (read-only), package registries (npm, pip, etc.)</td>
         </tr>
         <tr>
           <td>MCP Server &rarr; Anthropic API</td>
           <td>Any</td>
-          <td><span class="tag tag-red">DENY</span> explicitly blocked &mdash; no LLM calls to Anthropic</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>Explicitly blocked &mdash; no LLM calls to Anthropic from Trusted Zone, ever</td>
+        </tr>
+        <tr><td colspan="4" style="color: var(--accent2); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">Local AI (Trusted Zone)</td></tr>
+        <tr>
+          <td>MCP Server &rarr; Local AI</td>
+          <td>gRPC / HTTP :8080 (inbound)</td>
+          <td><span class="tag tag-green">ALLOW</span></td>
+          <td>Incoming inference requests from MCP Server only</td>
         </tr>
         <tr>
-          <td>MCP Server &rarr; Internet (Web)</td>
-          <td>HTTPS :443</td>
-          <td><span class="tag tag-yellow">ALLOW</span> web search + headless browser (Playwright) for verification</td>
+          <td>Local AI &rarr; MCP Server</td>
+          <td>Response only</td>
+          <td><span class="tag tag-green">ALLOW</span></td>
+          <td>Responses back to MCP Server &mdash; no initiated outbound connections</td>
         </tr>
         <tr>
           <td>Local AI &rarr; Internet</td>
           <td>Any</td>
-          <td><span class="tag tag-red">DENY</span> air-gapped</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>No external network access &mdash; only talks to MCP Server</td>
         </tr>
+        <tr><td colspan="4" style="color: var(--accent2); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">Storage (Trusted Zone &mdash; Air-Gapped)</td></tr>
         <tr>
           <td>Storage &rarr; Internet</td>
           <td>Any</td>
-          <td><span class="tag tag-red">DENY</span> air-gapped</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>Completely air-gapped &mdash; zero external network access</td>
         </tr>
+        <tr><td colspan="4" style="color: var(--text-dim); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">Inbound (Blocked by Default)</td></tr>
         <tr>
           <td>Targets &rarr; MCP Server</td>
           <td>Any</td>
-          <td><span class="tag tag-red">DENY</span> SSH is outbound-only from MCP</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>SSH is outbound-only from MCP Server</td>
         </tr>
         <tr>
           <td>Internet &rarr; Tool Intranet Tech Limited</td>
           <td>Any</td>
-          <td><span class="tag tag-red">DENY</span> WAN-only access</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>Intranet not reachable from public internet</td>
         </tr>
         <tr>
           <td>Internet &rarr; Trusted Zone</td>
           <td>Any</td>
-          <td><span class="tag tag-red">DENY</span> no inbound</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>No inbound connections from outside</td>
         </tr>
       </tbody>
     </table>
