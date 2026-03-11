@@ -849,7 +849,7 @@
   <!-- 02 ARCHITECTURE -->
   <section>
     <h2><span class="num">02</span> System Architecture</h2>
-    <p>The architecture implements a <strong>layered isolation pattern</strong> across four security zones. The Claude Code instance runs in the Company WAN &mdash; isolated from the internet, accessible only to a defined user set. All intelligence that touches raw data runs in a separate trusted zone that only the Claude Code instance can reach.</p>
+    <p>The architecture implements a <strong>layered isolation pattern</strong> across four security zones. The Claude Code instance runs in the Tool Intranet Tech Limited &mdash; isolated from the internet, accessible only to a defined user set. All intelligence that touches raw data runs in a separate trusted zone that only the Claude Code instance can reach.</p>
 
     <div class="arch-layout">
       <!-- Zone: Internet -->
@@ -874,12 +874,12 @@
         </div>
       </div>
 
-      <!-- Zone: Company WAN -->
+      <!-- Zone: Tool Intranet Tech Limited -->
       <div class="arch-zone">
-        <span class="arch-zone-label zone-dmz">Company WAN (Isolated)</span>
+        <span class="arch-zone-label zone-dmz">Tool Intranet Tech Limited</span>
         <div class="arch-box" style="border-color: rgba(255,217,61,0.3);">
           <div class="arch-box-title" style="color: var(--accent4);">Claude Code Instance</div>
-          <div class="arch-box-subtitle">Isolated runtime &mdash; Company WAN only &mdash; ACL-controlled user set</div>
+          <div class="arch-box-subtitle">Isolated runtime &mdash; Tool Intranet Tech Limited only &mdash; ACL-controlled user set</div>
           <div class="arch-subgrid">
             <div class="arch-subbox">
               <div class="arch-subbox-title" style="color: var(--accent);">Intelligence</div>
@@ -905,7 +905,7 @@
       <div class="arch-connector" style="height: 70px;">
         <div class="arch-connector-label">
           <span style="color: var(--accent4);">MCP Protocol (JSON-RPC)</span><br>
-          <span style="color: var(--accent2); font-size: 0.65rem;">Only connection from Company WAN into Trusted Zone</span>
+          <span style="color: var(--accent2); font-size: 0.65rem;">Only connection from Tool Intranet Tech Limited into Trusted Zone</span>
         </div>
       </div>
 
@@ -915,12 +915,21 @@
         <p style="font-size: 0.75rem; color: var(--text-dim); margin: 0 0 0.75rem;">Each component runs as a separate instance &mdash; VMs, bare-metal, or Kubernetes/Docker resources</p>
         <div class="arch-box" style="border-color: rgba(0,212,170,0.3); margin-bottom: 0.75rem;">
           <div class="arch-box-title" style="color: var(--accent2);">MCP Server <span style="color: var(--text-dim); font-weight: 400;">(Instance: VM / K8s / Docker)</span></div>
-          <div class="arch-box-subtitle">Only accepts connections from Claude Code instance</div>
+          <div class="arch-box-subtitle">Only accepts connections from Claude Code instance &mdash; <strong style="color: var(--accent3);">Anthropic API blocked</strong></div>
           <div class="arch-subgrid">
+            <div class="arch-subbox">
+              <div class="arch-subbox-title" style="color: var(--accent2);">Own Agent SDK (Local LLM Only)</div>
+              <ul class="arch-subbox-items">
+                <li>Runs Claude Agent SDK internally</li>
+                <li>Connected to Local AI (MiniMax 2.5) only</li>
+                <li>All Anthropic API connections blocked</li>
+                <li>Reasoning happens on-premises</li>
+              </ul>
+            </div>
             <div class="arch-subbox">
               <div class="arch-subbox-title" style="color: var(--accent2);">SSH Gateway</div>
               <ul class="arch-subbox-items">
-                <li>Ephemeral key generation</li>
+                <li>Platform API key provisioning</li>
                 <li>Session management</li>
                 <li>Command execution</li>
               </ul>
@@ -931,22 +940,23 @@
                 <li>Layer 1: Regex (deterministic)</li>
                 <li>Layer 2: Local AI (contextual)</li>
                 <li>Canary token validation</li>
+                <li style="color: var(--accent3);">Source code = customer IP &mdash; never transmitted</li>
               </ul>
             </div>
             <div class="arch-subbox">
               <div class="arch-subbox-title" style="color: var(--accent2);">Escalation Logic</div>
               <ul class="arch-subbox-items">
-                <li>Local-first resolution</li>
+                <li>Local-first resolution via own Agent SDK</li>
                 <li>Anonymize + escalate to Claude Code</li>
                 <li>Web search for research</li>
               </ul>
             </div>
             <div class="arch-subbox">
-              <div class="arch-subbox-title" style="color: var(--accent2);">Session Logger</div>
+              <div class="arch-subbox-title" style="color: var(--accent2);">Headless Browser</div>
               <ul class="arch-subbox-items">
-                <li>Anonymized I/O logging</li>
-                <li>Command audit trail</li>
-                <li>Cost tracking</li>
+                <li>Chrome headless + Playwright</li>
+                <li>Website verification &amp; issue validation</li>
+                <li>Visual regression testing</li>
               </ul>
             </div>
           </div>
@@ -1022,12 +1032,12 @@
         <div class="tool-card-desc">Public AI inference (Opus/Sonnet) and web search. Third-party infrastructure with no data control. All data entering this zone is considered <strong>permanently disclosed</strong>. Only anonymized context may reach this zone.</div>
       </div>
       <div class="tool-card">
-        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-wan">Company WAN (Isolated)</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-wan">Tool Intranet Tech Limited</span></div>
         <div class="tool-card-header">
           <span class="tool-card-icon">&#128737;&#65039;</span>
           <span class="tool-card-name">Claude Code Instance</span>
         </div>
-        <div class="tool-card-desc">Isolated runtime environment, only reachable via Company WAN. ACL-controlled user set. Runs high-level planning, task delegation, and research (via Anthropic API + web browsing). <strong>No direct SSH access to targets.</strong> Only allowed outbound connection: to the Trusted Zone via MCP protocol.</div>
+        <div class="tool-card-desc">Isolated runtime environment, only reachable via Tool Intranet Tech Limited. ACL-controlled user set. Runs high-level planning, task delegation, and research (via Anthropic API + web browsing). <strong>No direct SSH access to targets.</strong> Only allowed outbound connection: to the Trusted Zone via MCP protocol.</div>
       </div>
       <div class="tool-card">
         <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-trusted">Trusted Zone (Self-Hosted)</span></div>
@@ -1035,7 +1045,7 @@
           <span class="tool-card-icon">&#129504;</span>
           <span class="tool-card-name">MCP Server + Local AI + Storage</span>
         </div>
-        <div class="tool-card-desc">Maximum isolation. Three separate instances (VMs, bare-metal, or K8s/Docker): <strong>MCP Server</strong> (SSH gateway, anonymization, web search), <strong>Local AI / MiniMax 2.5</strong> (raw data reasoning, no network), <strong>Storage</strong> (PostgreSQL + Qdrant, no network). Only accepts connections from Claude Code instance.</div>
+        <div class="tool-card-desc">Maximum isolation. Three separate instances (VMs, bare-metal, or K8s/Docker): <strong>MCP Server</strong> (own Agent SDK, SSH gateway, anonymization &mdash; <strong style="color: var(--accent3);">Anthropic API blocked</strong>), <strong>Local AI / MiniMax 2.5</strong> (raw data reasoning, no network), <strong>Storage</strong> (PostgreSQL + Qdrant, no network). MCP Server&rsquo;s Agent SDK communicates exclusively with the Local LLM.</div>
       </div>
       <div class="tool-card">
         <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-targets">Targets (Variable)</span></div>
@@ -1064,13 +1074,13 @@
         </tr>
         <tr>
           <td>Claude Code Instance</td>
-          <td><span class="tag tag-yellow">Company WAN</span></td>
+          <td><span class="tag tag-yellow">Tool Intranet Tech Limited</span></td>
           <td>High-level planning, task delegation, research, user interface</td>
         </tr>
         <tr>
           <td>MCP Server</td>
           <td><span class="tag tag-green">Trusted Zone</span></td>
-          <td>SSH orchestration, anonymization, escalation, web search, logging</td>
+          <td>Own Agent SDK (local LLM only, Anthropic blocked), SSH orchestration, anonymization, escalation, headless browser (Playwright), web search, logging</td>
         </tr>
         <tr>
           <td>Local AI (MiniMax 2.5)</td>
@@ -1136,9 +1146,14 @@
           <td><span class="tag tag-yellow">ALLOW</span> ephemeral key only</td>
         </tr>
         <tr>
-          <td>MCP Server &rarr; Internet</td>
+          <td>MCP Server &rarr; Anthropic API</td>
+          <td>Any</td>
+          <td><span class="tag tag-red">DENY</span> explicitly blocked &mdash; no LLM calls to Anthropic</td>
+        </tr>
+        <tr>
+          <td>MCP Server &rarr; Internet (Web)</td>
           <td>HTTPS :443</td>
-          <td><span class="tag tag-yellow">ALLOW</span> web search for research</td>
+          <td><span class="tag tag-yellow">ALLOW</span> web search + headless browser (Playwright) for verification</td>
         </tr>
         <tr>
           <td>Local AI &rarr; Internet</td>
@@ -1156,7 +1171,7 @@
           <td><span class="tag tag-red">DENY</span> SSH is outbound-only from MCP</td>
         </tr>
         <tr>
-          <td>Internet &rarr; Company WAN</td>
+          <td>Internet &rarr; Tool Intranet Tech Limited</td>
           <td>Any</td>
           <td><span class="tag tag-red">DENY</span> WAN-only access</td>
         </tr>
@@ -1221,7 +1236,10 @@
   <!-- 04 SSH KEY LIFECYCLE -->
   <section>
     <h2><span class="num">04</span> SSH Key Lifecycle</h2>
-    <p>SSH authentication uses <strong>ephemeral, API-issued keys</strong> with a hardcoded 15-minute TTL. The key lifecycle is fully automated with no persistent secrets.</p>
+    <p>SSH authentication uses <strong>standard SSH keys</strong> &mdash; no certificates, no CA infrastructure. Two distinct provisioning paths exist depending on target type. No complex PKI is required because targets range from managed hosting to customer VPS to dedicated servers.</p>
+
+    <h3>Path A &mdash; Hosting Platform Targets (Managed)</h3>
+    <p>For servers managed through a hosting/VPS platform, the key lifecycle is fully automated via the platform&rsquo;s API.</p>
 
     <div class="pipeline">
       <div class="pipeline-steps">
@@ -1229,66 +1247,94 @@
           <div class="step-icon">&#128477;&#65039;</div>
           <div class="step-content">
             <div class="step-title">1. Key Request</div>
-            <div class="step-detail">Claude Code (Company WAN) calls the MCP tool <code>ssh_connect</code> with target host and user. The MCP server generates an Ed25519 keypair in memory.</div>
-            <span class="step-tech">Ed25519</span>
-            <span class="step-tech">In-memory only</span>
+            <div class="step-detail">Claude Code (Tool Intranet Tech Limited) calls the MCP tool <code>ssh_connect</code> with target host and user. The MCP server requests an SSH key from the <strong>hosting platform&rsquo;s API endpoint</strong>.</div>
+            <span class="step-tech">Platform API</span>
+            <span class="step-tech">Standard SSH key</span>
           </div>
         </div>
         <div class="pipeline-step">
           <div class="step-icon">&#128274;</div>
           <div class="step-content">
-            <div class="step-title">2. Certificate Signing</div>
-            <div class="step-detail">The public key is signed by an internal CA with a <strong>forced 15-minute validity</strong> (<code>-V +15m</code>). The CA private key is stored in Kubernetes Secrets, never in the container image. Certificate includes <code>force-command</code> and <code>source-address</code> restrictions.</div>
-            <span class="step-tech">ssh-keygen -s ca_key -V +15m</span>
+            <div class="step-title">2. Key Provisioning</div>
+            <div class="step-detail">The hosting platform generates the SSH keypair and enforces a <strong>hardcoded 15-minute TTL</strong>. The platform manages the full lifecycle &mdash; creation, authorization on the target, and automatic expiry. No certificates or CA signing required.</div>
+            <span class="step-tech">15min TTL (platform-enforced)</span>
           </div>
         </div>
         <div class="pipeline-step">
           <div class="step-icon">&#128640;</div>
           <div class="step-content">
             <div class="step-title">3. Connection</div>
-            <div class="step-detail">MCP server connects to target using the ephemeral key. Target validates: (a) certificate signed by known CA, (b) source IP matches MCP server CIDR, (c) certificate not expired, (d) principal matches allowed user.</div>
-            <span class="step-tech">TrustedUserCAKeys /etc/ssh/ca.pub</span>
+            <div class="step-detail">MCP server connects to the target using the provisioned key. The key is known inside the environment &mdash; the platform has already authorized it on the target machine. Standard SSH public key authentication.</div>
+            <span class="step-tech">SSH public key auth</span>
           </div>
         </div>
         <div class="pipeline-step">
           <div class="step-icon">&#128260;</div>
           <div class="step-content">
             <div class="step-title">4. Command Execution</div>
-            <div class="step-detail">Commands execute within the SSH session. All stdout/stderr is captured. The MCP server maintains the session state and streams results through the anonymization pipeline.</div>
+            <div class="step-detail">Commands execute within the SSH session. All stdout/stderr is captured. The MCP server maintains session state and streams results through the anonymization pipeline.</div>
             <span class="step-tech">PTY allocation disabled</span>
           </div>
         </div>
         <div class="pipeline-step">
           <div class="step-icon">&#128465;&#65039;</div>
           <div class="step-content">
-            <div class="step-title">5. Key Destruction</div>
-            <div class="step-detail">Private key is zeroed from memory after session ends or after 15 minutes, whichever comes first. No key material is written to disk at any point. Certificate auto-expires on the target side.</div>
-            <span class="step-tech">memset(key, 0, len)</span>
+            <div class="step-title">5. Key Expiry</div>
+            <div class="step-detail">After 15 minutes, the hosting platform automatically invalidates the key. Private key is zeroed from MCP server memory after session ends. No key material persists on disk.</div>
+            <span class="step-tech">Auto-expire (platform)</span>
             <span class="step-tech">No disk I/O</span>
           </div>
         </div>
       </div>
     </div>
 
-    <h3>Target Machine sshd_config</h3>
-    <div class="code-block"><span class="comment"># /etc/ssh/sshd_config.d/mcp-access.conf</span>
+    <h3>Path B &mdash; Customer/External Targets (Manual)</h3>
+    <p>For customer VPS, webspaces, or dedicated servers, key management is a <strong>customer-controlled process</strong>.</p>
 
-<span class="keyword">TrustedUserCAKeys</span> /etc/ssh/mcp-ca.pub         <span class="comment"># Trust our CA for certificate auth</span>
-<span class="keyword">PasswordAuthentication</span> no                      <span class="comment"># No password auth, ever</span>
-<span class="keyword">AuthorizedPrincipalsFile</span> /etc/ssh/principals    <span class="comment"># Restrict which users can connect</span>
-<span class="keyword">MaxAuthTries</span> 1                                  <span class="comment"># Single attempt per connection</span>
-<span class="keyword">MaxSessions</span> 1                                   <span class="comment"># No session multiplexing</span>
-<span class="keyword">AllowTcpForwarding</span> no                           <span class="comment"># No port forwarding</span>
-<span class="keyword">X11Forwarding</span> no                                <span class="comment"># No X11</span>
-<span class="keyword">PermitTunnel</span> no                                 <span class="comment"># No VPN tunneling</span>
+    <div class="pipeline">
+      <div class="pipeline-steps">
+        <div class="pipeline-step">
+          <div class="step-icon">&#128477;&#65039;</div>
+          <div class="step-content">
+            <div class="step-title">1. Key Generation</div>
+            <div class="step-detail">The MCP server generates a standard SSH keypair. The public key is provided to the customer through a secure channel (e.g., dashboard, encrypted message).</div>
+            <span class="step-tech">Standard SSH key</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">&#128100;</div>
+          <div class="step-content">
+            <div class="step-title">2. Customer Adds Key</div>
+            <div class="step-detail">The customer manually adds the public key to their server (<code>~/.ssh/authorized_keys</code> or equivalent). This is the customer&rsquo;s own process &mdash; they control where, when, and how the key is deployed.</div>
+            <span class="step-tech">Customer-managed</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">&#128640;</div>
+          <div class="step-content">
+            <div class="step-title">3. Connection &amp; Execution</div>
+            <div class="step-detail">MCP server connects via standard SSH public key auth. Commands execute, output streams through the anonymization pipeline. Same data flow as managed targets.</div>
+            <span class="step-tech">SSH public key auth</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">&#128465;&#65039;</div>
+          <div class="step-content">
+            <div class="step-title">4. Customer Controls Revocation</div>
+            <div class="step-detail">The customer decides when to remove the key from their server. There is no automatic TTL &mdash; the trust relationship is explicit and customer-controlled. The customer can revoke access at any time by removing the public key.</div>
+            <span class="step-tech">Customer-revocable</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<span class="comment"># Firewall enforced separately via iptables/nftables:</span>
-<span class="comment"># -A INPUT -p tcp --dport 22 -s 10.42.1.0/24 -j ACCEPT</span>
-<span class="comment"># -A INPUT -p tcp --dport 22 -j DROP</span></div>
+    <div class="info-box">
+      <strong>Design Decision &mdash; No Certificate Authority:</strong> Certificate-based SSH authentication (with a CA signing short-lived certs) is ideal for homogeneous infrastructure under single administrative control. In our context, targets are diverse: managed hosting platforms, customer VPS instances, shared webspaces, dedicated servers. Requiring customers to configure <code>TrustedUserCAKeys</code> adds friction without meaningful security benefit. The hosting platform handles TTL for managed targets. For customer targets, the trust is explicit and revocable.
+    </div>
 
     <div class="highlight-box">
       <div class="highlight-value">15 min TTL</div>
-      <div class="highlight-label">Hardcoded. Non-configurable. Certificate-based expiry enforced server-side.<br>Even a stolen key is useless after expiry &mdash; and only from MCP server IP.</div>
+      <div class="highlight-label">Hardcoded on managed hosting platforms. Non-configurable. Platform-enforced expiry.<br>For customer targets: customer-controlled revocation via key removal.</div>
     </div>
   </section>
 
@@ -1392,6 +1438,12 @@ MCP Server: Executes fix locally on db-replica-02</div>
           <td></td>
           <td>Sensitive data stays local, no escalation</td>
         </tr>
+        <tr>
+          <td>Source code debugging</td>
+          <td><span class="tag tag-green">Yes</span></td>
+          <td><span class="tag tag-red">NEVER</span></td>
+          <td>Source code is customer IP &mdash; only structural descriptions may escalate</td>
+        </tr>
       </tbody>
     </table>
   </section>
@@ -1400,6 +1452,10 @@ MCP Server: Executes fix locally on db-replica-02</div>
   <section>
     <h2><span class="num">06</span> Anonymization Pipeline</h2>
     <p>Every piece of data passes through two independent anonymization layers before leaving the self-hosted infrastructure. Applied at two trigger points: <strong>(1) before escalation to Claude</strong> and <strong>(2) before writing to persistent logs</strong>.</p>
+
+    <div class="warning-box">
+      <strong>Source Code Protection &mdash; Customer IP:</strong> Customer source code is intellectual property and must <strong>never</strong> be transmitted outside the Trusted Zone. The Local AI (MiniMax 2.5) may analyze source code locally for debugging, but it must never include source code snippets in escalation packages sent to Claude Code. The anonymization pipeline treats all source code content as <code>[SOURCE_CODE_REDACTED]</code>. Only structural descriptions ("PHP file with syntax error on line 42", "missing import statement") may leave the Trusted Zone.
+    </div>
 
     <div class="two-col">
       <div class="tool-card">
@@ -1605,7 +1661,7 @@ DB_PASSWORD=real_password_here
           <td>SSH key theft</td>
           <td>Memory dump of MCP server</td>
           <td><span class="severity-badge severity-high">High</span></td>
-          <td>15min TTL, in-memory only, source-IP restriction on cert</td>
+          <td>15min TTL (managed), in-memory only, customer-revocable (external)</td>
         </tr>
         <tr>
           <td>Prompt injection via file content</td>
@@ -1620,10 +1676,10 @@ DB_PASSWORD=real_password_here
           <td>No external network, no tool access, output validation</td>
         </tr>
         <tr>
-          <td>CA key compromise</td>
-          <td>K8s secret extraction</td>
+          <td>Platform API key compromise</td>
+          <td>API credential theft</td>
           <td><span class="severity-badge severity-critical">Critical</span></td>
-          <td>HSM backing, RBAC, audit logging on secret access</td>
+          <td>K8s Secrets / Vault, RBAC, audit logging, API key rotation</td>
         </tr>
         <tr>
           <td>Lateral movement via MCP server</td>
@@ -1666,7 +1722,7 @@ DB_PASSWORD=real_password_here
       </li>
       <li class="border-yellow">
         <strong>Moderate Case: SSH key compromise</strong>
-        <p>Attacker obtains ephemeral key. <strong>Containment:</strong> Key expires in 15 minutes. Valid only from MCP server IP. Certificate includes source-address restriction. <strong>Blast radius:</strong> Access to one target machine for &le;15 minutes, only from the MCP server's network.</p>
+        <p>Attacker obtains ephemeral key. <strong>Containment:</strong> On managed hosting, key expires in 15 minutes (platform-enforced). On customer targets, key is valid until customer revokes. <strong>Blast radius:</strong> Access to one target machine, limited by key scope and MCP server IP.</p>
       </li>
       <li class="border-green">
         <strong>Contained Case: MiniMax prompt injection</strong>
@@ -1851,7 +1907,7 @@ DB_PASSWORD=real_password_here
         </tr>
         <tr>
           <td>Security of Processing (Art. 32)</td>
-          <td>Ephemeral SSH keys, network isolation, K8s policies</td>
+          <td>Platform-managed SSH keys (15min TTL), network isolation, K8s policies</td>
           <td>Penetration testing, NetworkPolicy audit</td>
         </tr>
         <tr>
@@ -1875,7 +1931,7 @@ DB_PASSWORD=real_password_here
   <!-- 11 KUBERNETES -->
   <section>
     <h2><span class="num">11</span> Infrastructure Deployment</h2>
-    <p>The Trusted Zone runs as a single-namespace Kubernetes deployment with strict resource isolation, network policies, and immutable infrastructure. The Claude Code instance runs separately in the Company WAN. All components can alternatively be deployed as VMs or bare-metal servers.</p>
+    <p>The Trusted Zone runs as a single-namespace Kubernetes deployment with strict resource isolation, network policies, and immutable infrastructure. The Claude Code instance runs separately in the Tool Intranet Tech Limited. All components can alternatively be deployed as VMs or bare-metal servers.</p>
 
     <table class="infra-table">
       <thead>
@@ -1917,11 +1973,11 @@ DB_PASSWORD=real_password_here
           <td><span class="tag tag-yellow">Qdrant 1.x</span></td>
         </tr>
         <tr>
-          <td>SSH Key Service</td>
+          <td>Platform API Gateway</td>
           <td>Deployment</td>
           <td>2 (HA)</td>
           <td>128Mi / 0.25 CPU</td>
-          <td><span class="tag tag-red">Go</span> <span class="tag tag-purple">Ed25519</span></td>
+          <td><span class="tag tag-green">Node.js</span> <span class="tag tag-purple">Hosting API</span></td>
         </tr>
         <tr>
           <td>Purge Worker</td>
@@ -1956,7 +2012,7 @@ DB_PASSWORD=real_password_here
       </li>
       <li>
         <strong>Secrets management</strong>
-        <p>CA private key stored in Kubernetes Secrets (or external HSM via CSI driver). Mounted as read-only volume, never as environment variable. Access audited via K8s audit log.</p>
+        <p>Hosting platform API credentials and SSH keys stored in Kubernetes Secrets (or external Vault). Mounted as read-only volume, never as environment variable. Access audited via K8s audit log.</p>
       </li>
       <li>
         <strong>Image provenance</strong>
@@ -1995,7 +2051,7 @@ DB_PASSWORD=real_password_here
     <h3>Phase 1 &mdash; Foundation</h3>
     <ul class="next-list">
       <li>MCP server core with SSH gateway and Claude Agent SDK integration</li>
-      <li>SSH certificate authority and ephemeral key service (Go)</li>
+      <li>Hosting platform API integration for SSH key provisioning</li>
       <li>Basic rule-based anonymization (Layer 1)</li>
       <li>PostgreSQL schema and session logging</li>
     </ul>
@@ -2020,15 +2076,15 @@ DB_PASSWORD=real_password_here
     <ul class="next-list">
       <li>Kubernetes NetworkPolicies for all zones</li>
       <li>Distroless images and image signing (cosign)</li>
-      <li>HSM-backed CA key storage</li>
+      <li>Vault-backed secrets management for platform API credentials</li>
       <li>Penetration testing and DSGVO compliance audit</li>
     </ul>
 
     <h3>Phase 5 &mdash; Onboarding &amp; Operations</h3>
     <ul class="next-list">
-      <li>Claude Code instance hardening and Company WAN access control</li>
+      <li>Claude Code instance hardening and Tool Intranet Tech Limited access control</li>
       <li>External target onboarding workflow (customer VPS/server SSH setup)</li>
-      <li>Certificate authority key rotation automation</li>
+      <li>Platform API credential rotation automation</li>
       <li>Network policy configuration per deployment type (K8s vs. VM vs. bare-metal)</li>
     </ul>
   </section>
