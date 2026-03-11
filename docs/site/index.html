@@ -1759,8 +1759,8 @@ DB_PASSWORD=real_password_here
         <p>A post-processing layer checks MiniMax responses for: (a) verbatim content copied from input files (b) base64-encoded strings that decode to input data (c) responses that are suspiciously long relative to the question (d) attempts to include raw data in "reasoning" text. Flagged responses are blocked and logged.</p>
       </li>
       <li class="border-green">
-        <strong>D4: Constrained Tool Access</strong>
-        <p>MiniMax 2.5 cannot issue SSH commands directly. It can only: analyze data, classify content, and return structured JSON responses to the MCP server. The MCP server alone decides which commands to execute. Even if injection succeeds, the model has no tools to act on it.</p>
+        <strong>D4: Agent SDK Tool Control</strong>
+        <p>MiniMax 2.5 is the reasoning backend of the Agent SDK &mdash; it <strong>does</strong> drive tool decisions, including when SSH via Bash is used. However, the Agent SDK&rsquo;s system prompt strictly defines that file content from SSH output is <strong>data to analyze</strong>, never instructions to follow. The Agent SDK enforces a fixed tool allowlist (Bash, Read/Write/Edit, Glob, Grep, Playwright) and all tool calls are logged. If a prompt injection tricks MiniMax into requesting an unusual command pattern, the output validation layer (D3) and behavioral monitoring (D5) catch the anomaly before execution.</p>
       </li>
       <li class="border-green">
         <strong>D5: Behavioral Monitoring</strong>
