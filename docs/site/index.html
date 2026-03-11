@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure SSH MCP Server</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e0e0e8;
+    --text-dim: #8888a0;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --accent3: #ff6b6b;
+    --accent4: #ffd93d;
+    --code-bg: #161622;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hero {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 50%, rgba(108, 99, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 50%, rgba(255, 107, 107, 0.06) 0%, transparent 50%);
+    animation: drift 20s ease-in-out infinite;
+  }
+
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-3%, 2%); }
+  }
+
+  .hero > * { position: relative; z-index: 1; }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+
+  .hero-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent3);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  h1 {
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 .gradient {
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1.25rem;
+    color: var(--text-dim);
+    max-width: 700px;
+    margin-bottom: 3rem;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 3rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent2);
+  }
+
+  .stat-value.red { color: var(--accent3); }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.25rem;
+  }
+
+  .content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  section {
+    margin-bottom: 5rem;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  h2 .num {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 2rem 0 0.75rem;
+    color: var(--accent2);
+  }
+
+  p { margin-bottom: 1rem; color: var(--text-dim); }
+  strong { color: var(--text); font-weight: 600; }
+
+  .pipeline {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+    overflow-x: auto;
+  }
+
+  .pipeline-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .pipeline-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1rem 0;
+    position: relative;
+  }
+
+  .pipeline-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: calc(1rem + 40px);
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  .step-content { flex: 1; min-width: 0; }
+  .step-title { font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+  .step-detail { font-size: 0.85rem; color: var(--text-dim); }
+  .step-tech {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--accent);
+    margin-top: 0.4rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: border-color 0.2s;
+  }
+
+  .tool-card:hover { border-color: var(--accent); }
+
+  .tool-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .tool-card-icon { font-size: 1.1rem; }
+  .tool-card-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--text);
+  }
+
+  .tool-card-desc {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .tool-category {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .infra-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  .infra-table th, .infra-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .infra-table th {
+    color: var(--text-dim);
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .infra-table td { color: var(--text-dim); }
+  .infra-table td:first-child { color: var(--text); font-weight: 500; }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  .tag-purple { background: rgba(108, 99, 255, 0.15); color: var(--accent); }
+  .tag-green { background: rgba(0, 212, 170, 0.15); color: var(--accent2); }
+  .tag-red { background: rgba(255, 107, 107, 0.15); color: var(--accent3); }
+  .tag-yellow { background: rgba(255, 217, 61, 0.15); color: var(--accent4); }
+
+  .decision-list {
+    list-style: none;
+    margin: 1.5rem 0;
+  }
+
+  .decision-list li {
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .decision-list li strong {
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  .decision-list li p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--text-dim);
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .arch-diagram .hl { color: var(--accent); }
+  .arch-diagram .hl2 { color: var(--accent2); }
+  .arch-diagram .hl3 { color: var(--accent3); }
+  .arch-diagram .hl4 { color: var(--accent4); }
+
+  .footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer a { color: var(--accent); text-decoration: none; }
+
+  .next-list {
+    list-style: none;
+    margin: 1.5rem 0;
+  }
+
+  .next-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .next-list li::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    flex-shrink: 0;
+  }
+
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.08), rgba(108, 99, 255, 0.08));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    margin: 2rem 0;
+  }
+
+  .highlight-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent3), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .highlight-label {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-top: 0.5rem;
+  }
+
+  .compliance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .compliance-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .compliance-card-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .compliance-card-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .compliance-card-value { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-top: 0.25rem; }
+
+  .warning-box {
+    background: rgba(255, 107, 107, 0.06);
+    border: 1px solid rgba(255, 107, 107, 0.2);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+
+  .warning-box strong { color: var(--accent3); }
+
+  .layer-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+
+  .layer-1 { background: rgba(108, 99, 255, 0.15); color: var(--accent); }
+  .layer-2 { background: rgba(0, 212, 170, 0.15); color: var(--accent2); }
+
+  @media (max-width: 640px) {
+    .hero-stats { gap: 1.5rem; }
+    .tools-grid { grid-template-columns: 1fr; }
+    .compliance-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    Privacy-First AI Infrastructure
+  </div>
+  <h1>Secure SSH <span class="gradient">MCP Server</span></h1>
+  <p class="hero-sub">An isolated AI agent architecture that routes SSH operations through a self-hosted MCP server with dual-layer anonymization. Sensitive data never leaves your infrastructure.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-value red">0</div>
+      <div class="stat-label">Secrets Exposed</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">2</div>
+      <div class="stat-label">Anonymization Layers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">15min</div>
+      <div class="stat-label">SSH Key Lifetime</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">100%</div>
+      <div class="stat-label">DSGVO Compliant</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PROBLEM -->
+  <section>
+    <h2><span class="num">01</span> The Problem</h2>
+    <p>Direct SSH connections via the Bash tool expose <strong>sensitive customer data</strong> to the public Anthropic-hosted AI. Every file read during an SSH session &mdash; credentials, config files, logs &mdash; passes through the main Claude context and potentially reaches Anthropic's infrastructure.</p>
+
+    <div class="warning-box">
+      <strong>Risk:</strong> A single <code>cat wp-config.php</code> during an SSH session sends database credentials, API keys, and salts to a third-party AI provider. This is a DSGVO and confidentiality violation.
+    </div>
+
+    <p>The solution: route all SSH operations through a <strong>self-hosted MCP server</strong> that contains its own AI agent. Sensitive data never leaves the self-hosted infrastructure. The main Claude instance only ever sees anonymized context.</p>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section>
+    <h2><span class="num">02</span> Architecture</h2>
+    <p>Four isolated layers ensure that raw secrets never reach the public AI. Each layer has strict boundaries enforced at the network level.</p>
+
+    <div class="arch-diagram"><span class="hl">Main Claude Instance</span>
+<span class="hl3">(Anthropic hosted, public AI)</span>
+High-level reasoning only &mdash; no SSH, no raw secrets
+          &darr;
+          &darr; MCP Protocol (anonymized payloads only)
+          &darr;
+<span class="hl2">MCP Server</span>
+<span class="hl4">(Self-hosted, Kubernetes/Docker)</span>
+&boxvr;&boxh;&boxh; Claude Agent SDK &mdash; orchestration layer
+&boxvr;&boxh;&boxh; SSH Gateway &mdash; key-only, 15min lifetime
+&boxvr;&boxh;&boxh; Dual-Layer Anonymization Pipeline
+&boxur;&boxh;&boxh; Full Session Logging (anonymized)
+    &boxvr;                            &boxvr;
+    &darr; Reasoning                   &darr; SSH (key-only)
+    &darr;                            &darr;
+<span class="hl2">MiniMax 2.5</span>               <span class="hl3">Target Machines</span>
+<span class="hl4">(Self-hosted LLM)</span>         <span class="hl4">(Firewalled)</span>
+Local brain                Port 22 open only
+No external logging        to MCP server IP</div>
+
+    <h3>Component Responsibilities</h3>
+
+    <table class="infra-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Role</th>
+          <th>Data Exposure</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Main Claude</td>
+          <td>High-level planning, reasoning on anonymized context, task delegation</td>
+          <td><span class="tag tag-green">Anonymized only</span></td>
+        </tr>
+        <tr>
+          <td>MCP Server</td>
+          <td>SSH orchestration, anonymization pipeline, logging, escalation logic</td>
+          <td><span class="tag tag-yellow">Full access</span></td>
+        </tr>
+        <tr>
+          <td>MiniMax 2.5</td>
+          <td>Low-level reasoning on raw data, anonymization second pass</td>
+          <td><span class="tag tag-yellow">Full access</span></td>
+        </tr>
+        <tr>
+          <td>Target Machines</td>
+          <td>SSH endpoints, firewall-restricted to MCP server IP only</td>
+          <td><span class="tag tag-red">Source data</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SSH AUTH -->
+  <section>
+    <h2><span class="num">03</span> SSH Authentication</h2>
+    <p>Zero-trust SSH with short-lived keys and strict network boundaries. No password authentication, no persistent keys, no direct access from the public AI.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-steps">
+        <div class="pipeline-step">
+          <div class="step-icon">🔑</div>
+          <div class="step-content">
+            <div class="step-title">Key Generation</div>
+            <div class="step-detail">Main Claude calls the key generation API. Short-lived SSH keys are issued with a hardcoded 15-minute lifetime. Non-configurable by design.</div>
+            <span class="step-tech">API-issued, auto-expire</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">📦</div>
+          <div class="step-content">
+            <div class="step-title">MCP Payload</div>
+            <div class="step-detail">The key, target IP, and user are passed as an MCP payload to the self-hosted server. Main Claude never executes SSH directly.</div>
+            <span class="step-tech">{ ip, user, ssh_key }</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">🛡️</div>
+          <div class="step-content">
+            <div class="step-title">Firewall Enforcement</div>
+            <div class="step-detail">Target machines only accept SSH from the MCP server IP range. Main Claude is firewalled &mdash; no outgoing SSH connections possible at network level.</div>
+            <span class="step-tech">Network Policy</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">🔒</div>
+          <div class="step-content">
+            <div class="step-title">Bash Tool Restriction</div>
+            <div class="step-detail">SSH commands are explicitly blocked in the Bash tool. Even if the firewall fails, the tooling layer prevents direct SSH usage.</div>
+            <span class="step-tech">Defense in depth</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-value">15 min</div>
+      <div class="highlight-label">Maximum key lifetime. Usable only from MCP server IP.<br>Issuing system unreachable from outside. Attack window: minimal.</div>
+    </div>
+  </section>
+
+  <!-- ESCALATION -->
+  <section>
+    <h2><span class="num">04</span> Escalation Logic</h2>
+    <p>MiniMax 2.5 handles routine tasks locally. Complex problems are escalated to main Claude &mdash; but only after the anonymization pipeline strips all sensitive data.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-steps">
+        <div class="pipeline-step">
+          <div class="step-icon">📥</div>
+          <div class="step-content">
+            <div class="step-title">MCP Server Receives SSH Task</div>
+            <div class="step-detail">The task arrives from main Claude via MCP protocol with the SSH payload.</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">🧠</div>
+          <div class="step-content">
+            <div class="step-title">MiniMax 2.5 Attempts Local Resolution</div>
+            <div class="step-detail">The self-hosted LLM analyzes raw data directly. No data leaves the infrastructure at this stage.</div>
+            <span class="step-tech">Self-hosted inference</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">✅</div>
+          <div class="step-content">
+            <div class="step-title">Resolved Locally?</div>
+            <div class="step-detail">If yes: anonymized result returned to main Claude. If no: escalation package is prepared.</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">🔐</div>
+          <div class="step-content">
+            <div class="step-title">Anonymization Pipeline</div>
+            <div class="step-detail">Dual-layer anonymization strips credentials, IPs, and personal data. File contents wrapped as "untrusted external data".</div>
+            <span class="step-tech">Rule-based + AI pass</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">📤</div>
+          <div class="step-content">
+            <div class="step-title">Escalate to Main Claude</div>
+            <div class="step-detail">Only the anonymized package reaches the public AI. Main Claude reasons and returns instructions. MCP Server executes locally.</div>
+            <span class="step-tech">Anthropic API</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANONYMIZATION -->
+  <section>
+    <h2><span class="num">05</span> Dual-Layer Anonymization</h2>
+    <p>Every piece of data passes through two independent anonymization layers before leaving the self-hosted infrastructure. Applied before escalation to main Claude and before writing to logs.</p>
+
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div style="margin-bottom: 0.75rem;"><span class="layer-badge layer-1">Layer 1 &mdash; Rule-Based</span></div>
+        <div class="tool-card-header">
+          <span class="tool-card-icon">⚡</span>
+          <span class="tool-card-name">Deterministic &amp; Fast</span>
+        </div>
+        <div class="tool-card-desc">
+          Regex patterns for known sensitive formats: IP addresses, emails, credentials, API keys, connection strings, private key material. Known file patterns: <code>.env</code>, <code>wp-config.php</code>, <code>.htaccess</code>. Replacements: <code>[IP_REDACTED]</code>, <code>[EMAIL_REDACTED]</code>, <code>***REDACTED***</code>.
+        </div>
+      </div>
+      <div class="tool-card">
+        <div style="margin-bottom: 0.75rem;"><span class="layer-badge layer-2">Layer 2 &mdash; MiniMax 2.5</span></div>
+        <div class="tool-card-header">
+          <span class="tool-card-icon">🧠</span>
+          <span class="tool-card-name">Contextual &amp; Thorough</span>
+        </div>
+        <div class="tool-card-desc">
+          Second pass over rule-based output. Identifies contextually sensitive content that rules would miss: credentials embedded in shell scripts, tokens in unexpected formats, personal data in log files. Catches the edge cases.
+        </div>
+      </div>
+    </div>
+
+    <h3>Canary Token Validation</h3>
+    <p>Known fake sensitive patterns are continuously fed through the anonymization pipeline. If a canary token appears unredacted in output, the system triggers an immediate pipeline failure alert. This provides <strong>continuous confidence</strong> without manual auditing.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-steps">
+        <div class="pipeline-step">
+          <div class="step-icon">🎯</div>
+          <div class="step-content">
+            <div class="step-title">Inject Canary Tokens</div>
+            <div class="step-detail">Known fake credentials, IPs, and API keys embedded in test payloads at regular intervals.</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">🔄</div>
+          <div class="step-content">
+            <div class="step-title">Run Through Pipeline</div>
+            <div class="step-detail">Canaries pass through both anonymization layers under production conditions.</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">🚨</div>
+          <div class="step-content">
+            <div class="step-title">Validate Output</div>
+            <div class="step-detail">If any canary token survives anonymization &rarr; immediate alert, pipeline halted, session quarantined.</div>
+            <span class="step-tech">Continuous validation</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROMPT INJECTION DEFENSE -->
+  <section>
+    <h2><span class="num">06</span> Prompt Injection Defense</h2>
+    <p>Remote file content is inherently untrusted. A malicious actor could embed LLM instructions inside a config file or log to manipulate MiniMax 2.5.</p>
+
+    <ul class="decision-list">
+      <li>
+        <strong>Strict Context Separation</strong>
+        <p>System prompt explicitly separates instruction context from data context. The model knows what is a command and what is untrusted input.</p>
+      </li>
+      <li>
+        <strong>Untrusted Data Wrapping</strong>
+        <p>All remote file content is wrapped and labeled as "untrusted external data" before being processed. No raw file content enters the instruction stream.</p>
+      </li>
+      <li>
+        <strong>Output Validation Layer</strong>
+        <p>Checks whether model responses contain content lifted verbatim from files rather than reasoned conclusions. Detects and blocks exfiltration attempts.</p>
+      </li>
+      <li>
+        <strong>Constrained Operation Mode</strong>
+        <p>MiniMax 2.5 operates in data-analysis-only mode. No instruction interpretation from file content. The model reasons about data &mdash; it does not execute embedded commands.</p>
+      </li>
+    </ul>
+  </section>
+
+  <!-- LOGGING -->
+  <section>
+    <h2><span class="num">07</span> Logging Architecture</h2>
+    <p>Every SSH session is logged for optimization and auditing &mdash; but raw logs are <strong>never retained</strong>. The pipeline processes, embeds, and purges.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-steps">
+        <div class="pipeline-step">
+          <div class="step-icon">📝</div>
+          <div class="step-content">
+            <div class="step-title">Ingest</div>
+            <div class="step-detail">Full session input/output captured. All SSH commands and results logged. Everything passes through the dual-layer anonymization pipeline first.</div>
+            <span class="step-tech">PostgreSQL + JSONB</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">🔮</div>
+          <div class="step-content">
+            <div class="step-title">Process &amp; Embed</div>
+            <div class="step-detail">Anonymized session data is converted to vector embeddings for semantic search over past sessions. Enables pattern recognition and optimization.</div>
+            <span class="step-tech">Qdrant Vector DB</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">🗑️</div>
+          <div class="step-content">
+            <div class="step-title">Purge Raw Logs</div>
+            <div class="step-detail">Raw logs are deleted from PostgreSQL after processing. Only anonymized embeddings are retained. Storage limitation enforced by design.</div>
+            <span class="step-tech">DSGVO Art. 5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="warning-box">
+      <strong>Access Control:</strong> Logs are restricted to authorized engineers only. Purpose: optimize MiniMax 2.5 tooling and improve the anonymization pipeline. Data never leaves self-hosted infrastructure.
+    </div>
+  </section>
+
+  <!-- DSGVO -->
+  <section>
+    <h2><span class="num">08</span> DSGVO Compliance</h2>
+    <p>Privacy is not a feature &mdash; it is the architecture. Every component is designed with DSGVO principles as structural constraints, not add-ons.</p>
+
+    <div class="compliance-grid">
+      <div class="compliance-card">
+        <div class="compliance-card-icon">🏗️</div>
+        <div class="compliance-card-label">Art. 25</div>
+        <div class="compliance-card-value">Privacy by Design</div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-card-icon">⏱️</div>
+        <div class="compliance-card-label">Art. 5</div>
+        <div class="compliance-card-value">Storage Limitation</div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-card-icon">📉</div>
+        <div class="compliance-card-label">Art. 5</div>
+        <div class="compliance-card-value">Data Minimization</div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-card-icon">🔒</div>
+        <div class="compliance-card-label">Art. 32</div>
+        <div class="compliance-card-value">Security of Processing</div>
+      </div>
+    </div>
+
+    <table class="infra-table">
+      <thead>
+        <tr>
+          <th>Principle</th>
+          <th>Implementation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Privacy by Design</td>
+          <td>Anonymization built into the architecture, not bolted on</td>
+        </tr>
+        <tr>
+          <td>Storage Limitation</td>
+          <td>Raw logs deleted after processing &mdash; only embeddings retained</td>
+        </tr>
+        <tr>
+          <td>Data Minimization</td>
+          <td>Only anonymized data retained long-term</td>
+        </tr>
+        <tr>
+          <td>Security of Processing</td>
+          <td>Key-only SSH, firewall restrictions, isolated infrastructure</td>
+        </tr>
+        <tr>
+          <td>Access Control</td>
+          <td>Role-restricted log access, authorized engineers only</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="warning-box">
+      <strong>Critical:</strong> Anonymization must meet the legal bar for <strong>true anonymization</strong> (not pseudonymization). If re-identification is theoretically possible, data remains personal data under DSGVO. The canary token system and MiniMax second pass are key to meeting this bar. If any personal data escapes to main Claude, a Data Processing Agreement with Anthropic is required.
+    </div>
+  </section>
+
+  <!-- INFRASTRUCTURE -->
+  <section>
+    <h2><span class="num">09</span> Infrastructure</h2>
+
+    <table class="infra-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Deployment</th>
+          <th>Stack</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>MCP Server</td>
+          <td>Kubernetes (single global instance)</td>
+          <td><span class="tag tag-green">Docker</span> <span class="tag tag-purple">Node.js</span> <span class="tag tag-purple">Agent SDK</span></td>
+        </tr>
+        <tr>
+          <td>MiniMax 2.5</td>
+          <td>Separate service, independently scalable</td>
+          <td><span class="tag tag-green">Docker</span> <span class="tag tag-yellow">Self-hosted LLM</span></td>
+        </tr>
+        <tr>
+          <td>PostgreSQL</td>
+          <td>Kubernetes StatefulSet</td>
+          <td><span class="tag tag-green">Docker</span> <span class="tag tag-purple">JSONB</span></td>
+        </tr>
+        <tr>
+          <td>Qdrant</td>
+          <td>Kubernetes StatefulSet</td>
+          <td><span class="tag tag-green">Docker</span> <span class="tag tag-yellow">Vector DB</span></td>
+        </tr>
+        <tr>
+          <td>SSH Key Service</td>
+          <td>Kubernetes Deployment</td>
+          <td><span class="tag tag-red">API</span> <span class="tag tag-purple">15min TTL</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ul class="decision-list">
+      <li>
+        <strong>Immutable container images</strong>
+        <p>No runtime configuration changes. Secrets mounted via Kubernetes Secrets, never baked into images.</p>
+      </li>
+      <li>
+        <strong>Strict network policies</strong>
+        <p>MCP server can reach target machines. Target machines reject all other SSH sources. MiniMax 2.5 has no external network access.</p>
+      </li>
+      <li>
+        <strong>Independent scaling</strong>
+        <p>MiniMax 2.5 scales separately from the MCP server. During high load, inference capacity increases without affecting SSH orchestration.</p>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ROADMAP -->
+  <section>
+    <h2><span class="num">10</span> Roadmap</h2>
+    <ul class="next-list">
+      <li>MCP server core &mdash; SSH gateway and Claude Agent SDK integration</li>
+      <li>MiniMax 2.5 integration and escalation logic</li>
+      <li>Dual-layer anonymization pipeline with canary token validation</li>
+      <li>Prompt injection defense layer</li>
+      <li>Logging infrastructure &mdash; PostgreSQL, Qdrant, and purge pipeline</li>
+      <li>Kubernetes deployment and network policies</li>
+      <li>Database schema design for session logs</li>
+      <li>Qdrant index structure for session embeddings</li>
+    </ul>
+  </section>
+
+</div>
+
+<footer class="footer">
+  Concept by <a href="https://www.diemit.com" target="_blank">DiemIT GmbH</a> &middot; Powered by <a href="https://anthropic.com" target="_blank">Claude</a> + <a href="https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/sdk" target="_blank">Agent SDK</a> + <a href="https://www.minimaxi.com" target="_blank">MiniMax</a> + <a href="https://qdrant.tech" target="_blank">Qdrant</a>
+</footer>
+
+</body>
+</html>
