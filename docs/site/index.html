@@ -1873,7 +1873,7 @@ DB_PASSWORD=real_password_here
   <!-- 09 LOGGING -->
   <section>
     <h2><span class="num">09</span> Logging &amp; Observability</h2>
-    <p>Every SSH session is fully auditable, but raw data is <strong>never retained beyond processing</strong>. The logging pipeline implements a strict ingest &rarr; embed &rarr; purge lifecycle.</p>
+    <p>Two distinct log streams provide full auditability: <strong>SSH command logs</strong> (what happened on the target) and <strong>Agent SDK reasoning logs</strong> (why the agent made each decision). Both pass through the anonymization pipeline. Raw data is <strong>never retained beyond processing</strong>.</p>
 
     <h3>Session Log Schema (PostgreSQL)</h3>
     <div class="code-block"><span class="keyword">CREATE TABLE</span> ssh_sessions (
@@ -1906,10 +1906,30 @@ DB_PASSWORD=real_password_here
   executed_at     TIMESTAMPTZ <span class="keyword">NOT NULL</span>
 );
 
-<span class="keyword">CREATE INDEX</span> idx_commands_session ON ssh_commands(session_id, sequence);
+<span class="keyword">CREATE INDEX</span> idx_commands_session ON ssh_commands(session_id, sequence);</div>
 
-<span class="comment">-- Purge policy: raw JSONB fields are NULLed after embedding</span>
-<span class="comment">-- Only metadata (hashes, counts, durations) are retained permanently</span></div>
+    <h3>Agent SDK Reasoning Log Schema (PostgreSQL)</h3>
+    <div class="code-block"><span class="keyword">CREATE TABLE</span> agent_reasoning_steps (
+  id              UUID <span class="keyword">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  session_id      UUID <span class="keyword">REFERENCES</span> ssh_sessions(id),
+  sequence        INTEGER <span class="keyword">NOT NULL</span>,        <span class="comment">-- step order within session</span>
+  step_type       TEXT <span class="keyword">NOT NULL</span>,           <span class="comment">-- 'tool_call', 'reasoning', 'escalation_decision', 'error'</span>
+  tool_name       TEXT,                     <span class="comment">-- Bash, Read, Grep, Playwright, etc. (NULL for reasoning steps)</span>
+  tool_input_anon TEXT,                     <span class="comment">-- anonymized tool input (e.g., command text)</span>
+  tool_output_anon JSONB,                   <span class="comment">-- anonymized tool output (purged after embedding)</span>
+  reasoning_anon  TEXT,                     <span class="comment">-- anonymized MiniMax reasoning text (purged after embedding)</span>
+  decision        TEXT,                     <span class="comment">-- 'resolve_locally', 'escalate', 'execute_command', 'abort'</span>
+  escalated       BOOLEAN <span class="keyword">DEFAULT</span> false,
+  duration_ms     INTEGER,
+  anonymization   JSONB <span class="keyword">NOT NULL</span>,          <span class="comment">-- metadata: {layer1_redactions: N, layer2_redactions: N}</span>
+  created_at      TIMESTAMPTZ <span class="keyword">DEFAULT</span> now()
+);
+
+<span class="keyword">CREATE INDEX</span> idx_reasoning_session ON agent_reasoning_steps(session_id, sequence);
+
+<span class="comment">-- Purge policy: reasoning_anon, tool_input_anon, tool_output_anon</span>
+<span class="comment">-- are NULLed after embedding. Only metadata retained permanently:</span>
+<span class="comment">-- step_type, tool_name, decision, escalated, duration_ms, anonymization stats</span></div>
 
     <h3>Data Lifecycle</h3>
     <div class="pipeline">
@@ -1977,6 +1997,16 @@ DB_PASSWORD=real_password_here
           <td>MiniMax inference latency (p99)</td>
           <td>MiniMax service</td>
           <td>&gt;5s &rarr; scale up</td>
+        </tr>
+        <tr>
+          <td>Agent reasoning steps per session</td>
+          <td>Agent SDK logger</td>
+          <td>&gt;50 steps &rarr; review (possible loop or injection)</td>
+        </tr>
+        <tr>
+          <td>Escalation decision frequency</td>
+          <td>Agent SDK logger</td>
+          <td>&gt;3 escalations per session &rarr; investigate</td>
         </tr>
         <tr>
           <td>Output validation rejections</td>
