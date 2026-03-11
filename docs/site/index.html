@@ -917,13 +917,14 @@
           <div class="arch-box-title" style="color: var(--accent2);">MCP Server <span style="color: var(--text-dim); font-weight: 400;">(Instance: VM / K8s / Docker)</span></div>
           <div class="arch-box-subtitle">Only accepts connections from Claude Code instance &mdash; <strong style="color: var(--accent3);">Anthropic API blocked</strong></div>
           <div class="arch-subgrid">
-            <div class="arch-subbox">
-              <div class="arch-subbox-title" style="color: var(--accent2);">Own Agent SDK (Local LLM Only)</div>
+            <div class="arch-subbox" style="grid-column: 1 / -1; border-color: rgba(0,212,170,0.3);">
+              <div class="arch-subbox-title" style="color: var(--accent2);">Own Claude Code Instance (Agent SDK &rarr; Local LLM Only)</div>
               <ul class="arch-subbox-items">
-                <li>Runs Claude Agent SDK internally</li>
-                <li>Connected to Local AI (MiniMax 2.5) only</li>
-                <li>All Anthropic API connections blocked</li>
-                <li>Reasoning happens on-premises</li>
+                <li>Runs Claude Agent SDK with MiniMax 2.5 as inference backend</li>
+                <li>All Anthropic API connections <strong style="color: var(--accent3);">blocked</strong> &mdash; reasoning is 100% on-premises</li>
+                <li><strong>Agent tools available:</strong> SSH (via gateway), Bash, Read/Write/Edit, Glob, Grep, Chrome headless + Playwright</li>
+                <li>Playwright enables website verification, visual issue validation, screenshot-based debugging</li>
+                <li>Same tool capabilities as Claude Code in Tool Intranet &mdash; but isolated to local LLM only</li>
               </ul>
             </div>
             <div class="arch-subbox">
@@ -949,14 +950,6 @@
                 <li>Local-first resolution via own Agent SDK</li>
                 <li>Anonymize + escalate to Claude Code</li>
                 <li>Web search for research</li>
-              </ul>
-            </div>
-            <div class="arch-subbox">
-              <div class="arch-subbox-title" style="color: var(--accent2);">Headless Browser</div>
-              <ul class="arch-subbox-items">
-                <li>Chrome headless + Playwright</li>
-                <li>Website verification &amp; issue validation</li>
-                <li>Visual regression testing</li>
               </ul>
             </div>
           </div>
