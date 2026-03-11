@@ -142,6 +142,57 @@
     padding: 0 2rem 6rem;
   }
 
+  /* Scale up for large screens */
+  @media (min-width: 1400px) {
+    .content { max-width: 1200px; }
+    body { font-size: 1.05rem; }
+  }
+
+  @media (min-width: 1800px) {
+    .content { max-width: 1440px; }
+    body { font-size: 1.1rem; }
+    h1 { font-size: clamp(3rem, 6vw, 6.5rem); }
+    h2 { font-size: 2.1rem; }
+    .hero-sub { font-size: 1.4rem; max-width: 900px; }
+    .stat-value { font-size: 2.5rem; }
+    .arch-zone { max-width: 900px; }
+    .arch-split { max-width: 900px; }
+    .arch-split-connector { max-width: 900px; }
+  }
+
+  @media (min-width: 2400px) {
+    .content { max-width: 1680px; }
+    body { font-size: 1.2rem; }
+    h1 { font-size: clamp(3rem, 5vw, 7.5rem); }
+    h2 { font-size: 2.4rem; }
+    h3 { font-size: 1.3rem; }
+    .hero-sub { font-size: 1.5rem; max-width: 1000px; }
+    .stat-value { font-size: 3rem; }
+    .hero-stats { gap: 4rem; }
+    .tools-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+    .arch-zone { max-width: 1100px; }
+    .arch-split { max-width: 1100px; }
+    .arch-split-connector { max-width: 1100px; }
+    .pipeline { padding: 2.5rem; }
+    .code-block { font-size: 0.88rem; padding: 2rem; }
+    .arch-diagram { font-size: 0.85rem; padding: 2.5rem; }
+    .two-col { gap: 2rem; }
+    .compliance-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  @media (min-width: 3200px) {
+    .content { max-width: 2000px; }
+    body { font-size: 1.35rem; }
+    h2 { font-size: 2.8rem; }
+    h3 { font-size: 1.5rem; }
+    .tools-grid { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1.5rem; }
+    .arch-zone { max-width: 1400px; }
+    .arch-split { max-width: 1400px; }
+    .arch-split-connector { max-width: 1400px; }
+    .infra-table { font-size: 1.05rem; }
+    .infra-table th, .infra-table td { padding: 1rem 1.25rem; }
+  }
+
   section { margin-bottom: 5rem; }
 
   h2 {
@@ -597,6 +648,7 @@
     width: 100%;
     max-width: 700px;
     position: relative;
+    margin: 0 auto;
   }
 
   .arch-zone-label {
@@ -713,6 +765,7 @@
     gap: 1.5rem;
     width: 100%;
     max-width: 700px;
+    margin: 0 auto;
   }
 
   .arch-split-connector {
@@ -723,6 +776,7 @@
     position: relative;
     width: 100%;
     max-width: 700px;
+    margin: 0 auto;
   }
 
   .arch-split-connector .arch-split-line {
@@ -954,7 +1008,7 @@
             </div>
           </div>
         </div>
-        <div class="arch-split" style="max-width: 100%;">
+        <div class="arch-split" >
           <div class="arch-box" style="border-color: rgba(0,212,170,0.3);">
             <div class="arch-box-title" style="color: var(--accent2);">Local AI &mdash; MiniMax 2.5 <span style="color: var(--text-dim); font-weight: 400;">(Separate Instance)</span></div>
             <ul class="arch-box-items">
@@ -988,7 +1042,7 @@
       <!-- Zone: Targets -->
       <div class="arch-zone">
         <span class="arch-zone-label zone-isolated">Targets (Variable &mdash; Internal or External)</span>
-        <div class="arch-split" style="max-width: 100%;">
+        <div class="arch-split" >
           <div class="arch-box" style="border-color: rgba(108,99,255,0.3);">
             <div class="arch-box-title" style="color: var(--accent);">Internal Servers</div>
             <ul class="arch-box-items">
