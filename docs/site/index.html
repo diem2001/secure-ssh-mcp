@@ -1086,9 +1086,9 @@
         <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-trusted">Trusted Zone (Self-Hosted)</span></div>
         <div class="tool-card-header">
           <span class="tool-card-icon">&#129504;</span>
-          <span class="tool-card-name">MCP Server + Local AI + Storage</span>
+          <span class="tool-card-name">MCP Server + Local AI + S3 Key Store + Storage</span>
         </div>
-        <div class="tool-card-desc">Maximum isolation. Three separate instances (hosting model is your choice &mdash; VMs, bare-metal, K8s, Docker, etc.): <strong>MCP Server</strong> (own Claude Code via Agent SDK, Anthropic API <strong style="color: var(--accent3);">blocked</strong>), <strong>Local AI / MiniMax 2.5</strong> (raw data reasoning, no network), <strong>Storage</strong> (PostgreSQL + Qdrant, no network). MCP Server&rsquo;s Agent SDK communicates exclusively with the Local LLM.</div>
+        <div class="tool-card-desc">Maximum isolation. Four separate instances (hosting model is your choice &mdash; VMs, bare-metal, K8s, Docker, etc.): <strong>MCP Server</strong> (own Claude Code via Agent SDK, Anthropic API <strong style="color: var(--accent3);">blocked</strong>), <strong>Local AI / MiniMax 2.5</strong> (raw data reasoning, no network), <strong>S3 Key Store</strong> (write-only from Platform MCP Server, read-only from SSH MCP Server, auto-expire), <strong>Storage</strong> (PostgreSQL + Qdrant, no network). MCP Server&rsquo;s Agent SDK communicates exclusively with the Local LLM.</div>
       </div>
       <div class="tool-card">
         <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-targets">Targets (Variable)</span></div>
