@@ -1314,8 +1314,8 @@
           <div class="step-icon">&#128477;&#65039;</div>
           <div class="step-content">
             <div class="step-title">1. Key Request</div>
-            <div class="step-detail">Claude Code (Tool Intranet Tech Limited) calls the MCP tool <code>ssh_connect</code> with target host and user. The MCP server requests an SSH key from the <strong>hosting platform&rsquo;s API endpoint</strong>.</div>
-            <span class="step-tech">Platform API</span>
+            <div class="step-detail">Claude Code (Tool Intranet Tech Limited) requests an SSH key from the <strong>hosting platform&rsquo;s API endpoint</strong>, then passes target host, user, and the provisioned key to the MCP tool <code>ssh_connect</code>.</div>
+            <span class="step-tech">Platform API call by Claude Code</span>
             <span class="step-tech">Standard SSH key</span>
           </div>
         </div>
@@ -1323,7 +1323,7 @@
           <div class="step-icon">&#128274;</div>
           <div class="step-content">
             <div class="step-title">2. Key Provisioning</div>
-            <div class="step-detail">The hosting platform generates the SSH keypair and enforces a <strong>hardcoded 15-minute TTL</strong>. The platform manages the full lifecycle &mdash; creation, authorization on the target, and automatic expiry. No certificates or CA signing required.</div>
+            <div class="step-detail">The hosting platform generates the SSH keypair with a <strong>hardcoded 15-minute TTL</strong> and returns it to Claude Code. The platform manages authorization on the target and automatic expiry. Claude Code forwards the key to the MCP Server as part of the tool call. No certificates or CA signing required.</div>
             <span class="step-tech">15min TTL (platform-enforced)</span>
           </div>
         </div>
@@ -1331,7 +1331,7 @@
           <div class="step-icon">&#128640;</div>
           <div class="step-content">
             <div class="step-title">3. Connection</div>
-            <div class="step-detail">MCP server connects to the target using the provisioned key. The key is known inside the environment &mdash; the platform has already authorized it on the target machine. Standard SSH public key authentication.</div>
+            <div class="step-detail">MCP Server&rsquo;s Agent SDK uses the key received from Claude Code to connect via Bash: <code>ssh user@target -i key</code>. The platform has already authorized the key on the target. Standard SSH public key authentication.</div>
             <span class="step-tech">SSH public key auth</span>
           </div>
         </div>
