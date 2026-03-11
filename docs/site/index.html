@@ -1863,9 +1863,9 @@ DB_PASSWORD=real_password_here
         <strong>Moderate Case: SSH key compromise</strong>
         <p>Attacker obtains ephemeral key. <strong>Containment:</strong> On managed hosting, key expires in 15 minutes (platform-enforced). On customer targets, key is valid until customer revokes. <strong>Blast radius:</strong> Access to one target machine, limited by key scope and MCP server IP.</p>
       </li>
-      <li class="border-green">
-        <strong>Contained Case: MiniMax prompt injection</strong>
-        <p>Attacker manipulates MiniMax output. <strong>Containment:</strong> MiniMax has no tools, no network, no SSH access. Output validation catches anomalies. <strong>Blast radius:</strong> Incorrect analysis returned to MCP server. No data exfiltration possible &mdash; model cannot initiate outbound connections.</p>
+      <li class="border-yellow">
+        <strong>Escalation Risk: MiniMax prompt injection</strong>
+        <p>Attacker embeds malicious instructions in file content on a target system to manipulate MiniMax reasoning. <strong>Risk:</strong> MiniMax drives the Agent SDK&rsquo;s tool decisions &mdash; a successful injection could lead to unintended SSH commands or data access on the target. <strong>Containment:</strong> Data envelope wrapping (D2) marks all SSH output as untrusted. Output validation (D3) catches anomalous command patterns. Behavioral monitoring (D5) triggers circuit breaker on unusual activity. All tool calls are logged and auditable. <strong>Blast radius:</strong> Limited to the current target machine (SSH key scope). No data exfiltration to the internet &mdash; MCP Server&rsquo;s Anthropic API access is blocked, and source code never leaves the Trusted Zone (hard rule).</p>
       </li>
     </ul>
   </section>
