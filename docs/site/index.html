@@ -703,6 +703,8 @@
 
   .arch-box-items li {
     padding: 0.15rem 0;
+    padding-left: 1em;
+    text-indent: -1em;
   }
 
   .arch-box-items li::before {
@@ -986,24 +988,24 @@
             <div class="arch-subbox" style="grid-column: 1 / -1; border-color: rgba(0,212,170,0.3);">
               <div class="arch-subbox-title" style="color: var(--accent2);">Own Claude Code Instance (Agent SDK &rarr; Local LLM Only)</div>
               <ul class="arch-subbox-items">
-                <li>Runs Claude Agent SDK with MiniMax 2.5 as inference backend</li>
-                <li>All Anthropic API connections <strong style="color: var(--accent3);">blocked</strong> &mdash; reasoning is 100% on-premises</li>
-                <li><strong>Agent tools:</strong> Bash, Read/Write/Edit, Glob, Grep, Chrome headless + Playwright</li>
-                <li>SSH runs via Bash tool &mdash; <code>ssh user@target -i /path/to/key</code> &mdash; no separate gateway needed</li>
-                <li>Key material read from S3 Key Store (Trusted Zone) &mdash; never visible in Claude Code context</li>
-                <li>Playwright enables website verification, visual issue validation, screenshot-based debugging</li>
-                <li><strong>Escalation logic lives here:</strong> resolve locally or anonymize + escalate</li>
-                <li>Web search available for research during local resolution</li>
+                <li>Runs Claude Agent SDK with MiniMax 2.5<br>as inference backend</li>
+                <li>All Anthropic API connections <strong style="color: var(--accent3);">blocked</strong><br>reasoning is 100% on-premises</li>
+                <li><strong>Agent tools:</strong> Bash, Read/Write/Edit,<br>Glob, Grep, Chrome headless + Playwright</li>
+                <li>SSH runs via Bash tool<br><code>ssh user@target -i /path/to/key</code></li>
+                <li>Key material read from S3 Key Store<br>never visible in Claude Code context</li>
+                <li>Playwright enables website verification,<br>visual issue validation, screenshot debugging</li>
+                <li><strong>Escalation logic lives here:</strong><br>resolve locally or anonymize + escalate</li>
+                <li>Web search available for research<br>during local resolution</li>
               </ul>
             </div>
             <div class="arch-subbox" style="grid-column: 1 / -1;">
               <div class="arch-subbox-title" style="color: var(--accent2);">Anonymization Pipeline</div>
               <ul class="arch-subbox-items">
-                <li>Layer 1: Microsoft Presidio (regex + NLP + NER)</li>
+                <li>Layer 1: Microsoft Presidio<br>(regex + NLP + NER)</li>
                 <li>Layer 2: Local AI / MiniMax (contextual)</li>
                 <li>Canary token validation</li>
-                <li style="color: var(--accent3);">Source code = customer IP &mdash; never transmitted outside Trusted Zone</li>
-                <li style="color: var(--accent3);"><strong>Hard rule:</strong> MCP Server tool responses never contain program code, scripts, or file contents from customer systems</li>
+                <li style="color: var(--accent3);">Source code = customer IP<br>never transmitted outside Trusted Zone</li>
+                <li style="color: var(--accent3);"><strong>Hard rule:</strong> MCP Server tool responses<br>never contain program code, scripts, or<br>file contents from customer systems</li>
               </ul>
             </div>
           </div>
@@ -1109,9 +1111,9 @@
         <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-trusted">Trusted Zone (Self-Hosted)</span></div>
         <div class="tool-card-header">
           <span class="tool-card-icon">&#129504;</span>
-          <span class="tool-card-name">MCP Server + Local AI + S3 Key Store + Storage</span>
+          <span class="tool-card-name">MCP Server + Presidio + Local AI + S3 Key Store + Storage</span>
         </div>
-        <div class="tool-card-desc">Maximum isolation. Four separate instances (hosting model is your choice &mdash; VMs, bare-metal, K8s, Docker, etc.): <strong>MCP Server</strong> (own Claude Code via Agent SDK, Anthropic API <strong style="color: var(--accent3);">blocked</strong>), <strong>Local AI / MiniMax 2.5</strong> (raw data reasoning, no network), <strong>S3 Key Store</strong> (write-only from Platform MCP Server, read-only from SSH MCP Server, auto-expire), <strong>Storage</strong> (PostgreSQL + Qdrant, no network). MCP Server&rsquo;s Agent SDK communicates exclusively with the Local LLM.</div>
+        <div class="tool-card-desc">Maximum isolation. Five separate instances (hosting model is your choice &mdash; VMs, bare-metal, K8s, Docker, etc.): <strong>MCP Server</strong> (own Claude Code via Agent SDK, Anthropic API <strong style="color: var(--accent3);">blocked</strong>), <strong>Presidio</strong> (anonymization Layer 1, REST API), <strong>Local AI / MiniMax 2.5</strong> (raw data reasoning, no network), <strong>S3 Key Store</strong> (write-only from Platform MCP Server, read-only from SSH MCP Server, auto-expire), <strong>Storage</strong> (PostgreSQL + Qdrant, no network). MCP Server&rsquo;s Agent SDK communicates exclusively with the Local LLM.</div>
       </div>
       <div class="tool-card">
         <div style="margin-bottom: 0.5rem;"><span class="zone-label zone-targets">Targets (Variable)</span></div>
