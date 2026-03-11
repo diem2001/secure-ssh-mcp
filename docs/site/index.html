@@ -977,8 +977,8 @@
                 <li>Runs Claude Agent SDK with MiniMax 2.5 as inference backend</li>
                 <li>All Anthropic API connections <strong style="color: var(--accent3);">blocked</strong> &mdash; reasoning is 100% on-premises</li>
                 <li><strong>Agent tools:</strong> Bash, Read/Write/Edit, Glob, Grep, Chrome headless + Playwright</li>
-                <li>SSH runs via Bash tool &mdash; <code>ssh user@target -i key</code> &mdash; no separate gateway needed</li>
-                <li>Target, user, and key (from Platform API) are known to the agent context</li>
+                <li>SSH runs via Bash tool &mdash; <code>ssh user@target -i /path/to/key</code> &mdash; no separate gateway needed</li>
+                <li>Key material read from S3 Key Store (Trusted Zone) &mdash; never visible in Claude Code context</li>
                 <li>Playwright enables website verification, visual issue validation, screenshot-based debugging</li>
                 <li><strong>Escalation logic lives here:</strong> agent decides locally whether to resolve or anonymize + escalate to Claude Code in Tool Intranet</li>
                 <li>Web search available for research during local resolution</li>
@@ -995,7 +995,7 @@
             </div>
           </div>
         </div>
-        <div class="arch-split" >
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
           <div class="arch-box" style="border-color: rgba(0,212,170,0.3);">
             <div class="arch-box-title" style="color: var(--accent2);">Local AI &mdash; MiniMax 2.5 <span style="color: var(--text-dim); font-weight: 400;">(Separate Instance)</span></div>
             <ul class="arch-box-items">
@@ -1003,6 +1003,15 @@
               <li>Raw data access for local reasoning</li>
               <li>Anonymization Layer 2</li>
               <li>No external network access</li>
+            </ul>
+          </div>
+          <div class="arch-box" style="border-color: rgba(255,217,61,0.3);">
+            <div class="arch-box-title" style="color: var(--accent4);">S3 Key Store <span style="color: var(--text-dim); font-weight: 400;">(Separate Instance)</span></div>
+            <ul class="arch-box-items">
+              <li>Write-only from Platform MCP Server</li>
+              <li>Read-only from SSH MCP Server</li>
+              <li>SSH keys never visible in Claude Code</li>
+              <li>Auto-expire objects (15min TTL)</li>
             </ul>
           </div>
           <div class="arch-box" style="border-color: rgba(0,212,170,0.3);">
@@ -1021,7 +1030,7 @@
       <div class="arch-split-connector">
         <div class="arch-split-line">
           <div class="line"></div>
-          <div class="label" style="color: var(--accent3);">SSH (ephemeral key, 15min TTL)</div>
+          <div class="label" style="color: var(--accent3);">SSH (key from S3, ephemeral, 15min TTL)</div>
           <div class="line"></div>
         </div>
       </div>
@@ -1122,6 +1131,11 @@
           <td>Low-level reasoning on raw data, anonymization Layer 2</td>
         </tr>
         <tr>
+          <td>S3 Key Store</td>
+          <td><span class="tag tag-green">Trusted Zone</span> <span style="font-size: 0.75rem; color: var(--text-dim);">(separate instance)</span></td>
+          <td>Write-only SSH key storage. Platform MCP Server writes keys, SSH MCP Server reads keys. Keys never visible in Claude Code context. Auto-expire via S3 lifecycle.</td>
+        </tr>
+        <tr>
           <td>Storage (PG + Qdrant)</td>
           <td><span class="tag tag-green">Trusted Zone</span> <span style="font-size: 0.75rem; color: var(--text-dim);">(separate instance)</span></td>
           <td>Anonymized session logs, vector embeddings</td>
@@ -1160,10 +1174,16 @@
           <td>LLM inference (Opus/Sonnet) &mdash; subset of general internet access</td>
         </tr>
         <tr>
-          <td>Claude Code &rarr; MCP Server</td>
+          <td>Claude Code &rarr; Platform MCP Server</td>
           <td>MCP (JSON-RPC)</td>
           <td><span class="tag tag-green">ALLOW</span></td>
-          <td>Only connection into the Trusted Zone &mdash; task delegation to MCP Server</td>
+          <td>Request SSH key provisioning &mdash; receives only S3 path, never key material</td>
+        </tr>
+        <tr>
+          <td>Claude Code &rarr; SSH MCP Server</td>
+          <td>MCP (JSON-RPC)</td>
+          <td><span class="tag tag-green">ALLOW</span></td>
+          <td>Task delegation &mdash; passes S3 key path + target info for SSH operations</td>
         </tr>
         <tr>
           <td>Claude Code &rarr; Targets</td>
@@ -1201,6 +1221,31 @@
           <td>Any</td>
           <td><span class="tag tag-red">DENY</span></td>
           <td>Explicitly blocked &mdash; no LLM calls to Anthropic from Trusted Zone, ever</td>
+        </tr>
+        <tr><td colspan="4" style="color: var(--accent4); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">S3 Key Store (Trusted Zone)</td></tr>
+        <tr>
+          <td>Platform MCP Server &rarr; S3 Key Store</td>
+          <td>S3 API (HTTPS)</td>
+          <td><span class="tag tag-yellow">ALLOW</span></td>
+          <td>Write-only &mdash; deposit SSH private keys. No read, no list, no delete.</td>
+        </tr>
+        <tr>
+          <td>MCP Server &rarr; S3 Key Store</td>
+          <td>S3 API (HTTPS)</td>
+          <td><span class="tag tag-yellow">ALLOW</span></td>
+          <td>Read-only &mdash; retrieve SSH keys by path for connection. No write, no list.</td>
+        </tr>
+        <tr>
+          <td>Claude Code &rarr; S3 Key Store</td>
+          <td>Any</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>Key material never accessible from Tool Intranet &mdash; only S3 path references pass through Claude Code</td>
+        </tr>
+        <tr>
+          <td>S3 Key Store &rarr; Internet</td>
+          <td>Any</td>
+          <td><span class="tag tag-red">DENY</span></td>
+          <td>No external network access &mdash; Trusted Zone only</td>
         </tr>
         <tr><td colspan="4" style="color: var(--accent2); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">Local AI (Trusted Zone)</td></tr>
         <tr>
@@ -1306,7 +1351,7 @@
     <p>SSH authentication uses <strong>standard SSH keys</strong> &mdash; no certificates, no CA infrastructure. Two distinct provisioning paths exist depending on target type. No complex PKI is required because targets range from managed hosting to customer VPS to dedicated servers.</p>
 
     <h3>Path A &mdash; Hosting Platform Targets (Managed)</h3>
-    <p>For servers managed through a hosting/VPS platform, the key lifecycle is fully automated via the platform&rsquo;s API.</p>
+    <p>For servers managed through a hosting platform, the key lifecycle is fully automated. <strong>Key material never appears in the Claude Code context</strong> &mdash; it flows exclusively through the Trusted Zone via an S3 Key Store.</p>
 
     <div class="pipeline">
       <div class="pipeline-steps">
@@ -1314,24 +1359,26 @@
           <div class="step-icon">&#128477;&#65039;</div>
           <div class="step-content">
             <div class="step-title">1. Key Request</div>
-            <div class="step-detail">Claude Code (Tool Intranet Tech Limited) requests an SSH key from the <strong>hosting platform&rsquo;s API endpoint</strong>, then passes target host, user, and the provisioned key to the MCP tool <code>ssh_connect</code>.</div>
-            <span class="step-tech">Platform API call by Claude Code</span>
-            <span class="step-tech">Standard SSH key</span>
+            <div class="step-detail">Claude Code (Tool Intranet Tech Limited) calls an <strong>internal Platform MCP Server</strong> to request SSH access for a target host. The request contains only the target identifier &mdash; no key material is returned to Claude Code.</div>
+            <span class="step-tech">Platform MCP Server call</span>
+            <span class="step-tech">No key in response</span>
           </div>
         </div>
         <div class="pipeline-step">
-          <div class="step-icon">&#128274;</div>
+          <div class="step-icon">&#128230;</div>
           <div class="step-content">
-            <div class="step-title">2. Key Provisioning</div>
-            <div class="step-detail">The hosting platform generates the SSH keypair with a <strong>hardcoded 15-minute TTL</strong> and returns it to Claude Code. The platform manages authorization on the target and automatic expiry. Claude Code forwards the key to the MCP Server as part of the tool call. No certificates or CA signing required.</div>
+            <div class="step-title">2. Key &rarr; S3 Key Store (Write-Only)</div>
+            <div class="step-detail">The Platform MCP Server generates an SSH keypair with a <strong>hardcoded 15-minute TTL</strong>, provisions the public key on the target, and writes the private key to the <strong>S3 Key Store</strong> in the Trusted Zone. The bucket accepts <strong>write-only</strong> from the Platform MCP Server. Claude Code receives only an <strong>S3 object path</strong> (e.g., <code>s3://keys/abc123</code>) &mdash; never the key itself.</div>
+            <span class="step-tech">S3 write-only</span>
             <span class="step-tech">15min TTL (platform-enforced)</span>
           </div>
         </div>
         <div class="pipeline-step">
           <div class="step-icon">&#128640;</div>
           <div class="step-content">
-            <div class="step-title">3. Connection</div>
-            <div class="step-detail">MCP Server&rsquo;s Agent SDK uses the key received from Claude Code to connect via Bash: <code>ssh user@target -i key</code>. The platform has already authorized the key on the target. Standard SSH public key authentication.</div>
+            <div class="step-title">3. SSH MCP Server &rarr; S3 &rarr; Connection</div>
+            <div class="step-detail">Claude Code passes the S3 path and target info to the <strong>SSH MCP Server</strong> via tool call. The MCP Server&rsquo;s Agent SDK reads the private key from S3 (<strong>read-only</strong> access) and connects via Bash: <code>ssh user@target -i /tmp/key</code>. The key exists only in the Trusted Zone.</div>
+            <span class="step-tech">S3 read-only (MCP Server)</span>
             <span class="step-tech">SSH public key auth</span>
           </div>
         </div>
@@ -1339,48 +1386,50 @@
           <div class="step-icon">&#128260;</div>
           <div class="step-content">
             <div class="step-title">4. Command Execution</div>
-            <div class="step-detail">Commands execute within the SSH session. All stdout/stderr is captured. The MCP server maintains session state and streams results through the anonymization pipeline.</div>
+            <div class="step-detail">Commands execute within the SSH session. All stdout/stderr is captured. The MCP Server maintains session state and streams results through the anonymization pipeline.</div>
             <span class="step-tech">PTY allocation disabled</span>
           </div>
         </div>
         <div class="pipeline-step">
           <div class="step-icon">&#128465;&#65039;</div>
           <div class="step-content">
-            <div class="step-title">5. Key Expiry</div>
-            <div class="step-detail">After 15 minutes, the hosting platform automatically invalidates the key. Private key is zeroed from MCP server memory after session ends. No key material persists on disk.</div>
-            <span class="step-tech">Auto-expire (platform)</span>
-            <span class="step-tech">No disk I/O</span>
+            <div class="step-title">5. Key Expiry &amp; Cleanup</div>
+            <div class="step-detail">After 15 minutes, the hosting platform invalidates the key on the target. The S3 object auto-expires via lifecycle policy. Private key is zeroed from MCP Server memory after session ends. No key material persists anywhere.</div>
+            <span class="step-tech">S3 lifecycle auto-expire</span>
+            <span class="step-tech">Platform-enforced TTL</span>
           </div>
         </div>
       </div>
     </div>
 
-    <h3>Path B &mdash; Customer/External Targets (Manual)</h3>
-    <p>For customer VPS, webspaces, or dedicated servers, key management is a <strong>customer-controlled process</strong>.</p>
+    <h3>Path B &mdash; Customer Servers (Servers &amp; VPS)</h3>
+    <p>For customer servers and VPS instances, the same S3-based key flow applies. <strong>Key generation and the interaction with the customer is out of scope</strong> for this architecture &mdash; what matters is that the key ends up in the S3 Key Store, never in the Claude Code context.</p>
 
     <div class="pipeline">
       <div class="pipeline-steps">
         <div class="pipeline-step">
           <div class="step-icon">&#128477;&#65039;</div>
           <div class="step-content">
-            <div class="step-title">1. Key Generation</div>
-            <div class="step-detail">The MCP server generates a standard SSH keypair. The public key is provided to the customer through a secure channel (e.g., dashboard, encrypted message).</div>
-            <span class="step-tech">Standard SSH key</span>
+            <div class="step-title">1. Key Request</div>
+            <div class="step-detail">Claude Code calls the <strong>Platform MCP Server</strong> with the customer&rsquo;s target identifier. How the key was originally generated and how the customer interaction happened (key exchange, onboarding) is <strong>out of scope</strong> for this architecture.</div>
+            <span class="step-tech">Platform MCP Server call</span>
+            <span class="step-tech">Onboarding: out of scope</span>
           </div>
         </div>
         <div class="pipeline-step">
-          <div class="step-icon">&#128100;</div>
+          <div class="step-icon">&#128230;</div>
           <div class="step-content">
-            <div class="step-title">2. Customer Adds Key</div>
-            <div class="step-detail">The customer manually adds the public key to their server (<code>~/.ssh/authorized_keys</code> or equivalent). This is the customer&rsquo;s own process &mdash; they control where, when, and how the key is deployed.</div>
-            <span class="step-tech">Customer-managed</span>
+            <div class="step-title">2. Key &rarr; S3 Key Store (Write-Only)</div>
+            <div class="step-detail">The Platform MCP Server writes the private key to the <strong>S3 Key Store</strong> in the Trusted Zone. Same write-only mechanism as Path A. Claude Code receives only the <strong>S3 object path</strong> &mdash; never the key itself.</div>
+            <span class="step-tech">S3 write-only</span>
           </div>
         </div>
         <div class="pipeline-step">
           <div class="step-icon">&#128640;</div>
           <div class="step-content">
-            <div class="step-title">3. Connection &amp; Execution</div>
-            <div class="step-detail">MCP server connects via standard SSH public key auth. Commands execute, output streams through the anonymization pipeline. Same data flow as managed targets.</div>
+            <div class="step-title">3. SSH MCP Server &rarr; S3 &rarr; Connection</div>
+            <div class="step-detail">Same flow as Path A: the SSH MCP Server reads the key from S3, connects via Bash. The key exists only in the Trusted Zone.</div>
+            <span class="step-tech">S3 read-only (MCP Server)</span>
             <span class="step-tech">SSH public key auth</span>
           </div>
         </div>
@@ -1388,7 +1437,7 @@
           <div class="step-icon">&#128465;&#65039;</div>
           <div class="step-content">
             <div class="step-title">4. Customer Controls Revocation</div>
-            <div class="step-detail">The customer decides when to remove the key from their server. There is no automatic TTL &mdash; the trust relationship is explicit and customer-controlled. The customer can revoke access at any time by removing the public key.</div>
+            <div class="step-detail">The customer decides when to revoke access by removing the public key from their server. There is no automatic TTL for customer targets &mdash; the trust relationship is explicit and customer-controlled.</div>
             <span class="step-tech">Customer-revocable</span>
           </div>
         </div>
@@ -1396,12 +1445,16 @@
     </div>
 
     <div class="info-box">
-      <strong>Design Decision &mdash; No Certificate Authority:</strong> Certificate-based SSH authentication (with a CA signing short-lived certs) is ideal for homogeneous infrastructure under single administrative control. In our context, targets are diverse: managed hosting platforms, customer VPS instances, shared webspaces, dedicated servers. Requiring customers to configure <code>TrustedUserCAKeys</code> adds friction without meaningful security benefit. The hosting platform handles TTL for managed targets. For customer targets, the trust is explicit and revocable.
+      <strong>Design Decision &mdash; S3 Key Store as Key Broker:</strong> SSH keys are never visible in the Claude Code context (Tool Intranet Tech Limited). The Platform MCP Server writes keys directly to an S3 bucket in the Trusted Zone. Claude Code only ever sees an opaque S3 path reference. This eliminates the risk of key material leaking through the Anthropic API or being logged in the Claude conversation context. The SSH MCP Server reads keys from S3 with read-only access. Both paths (managed hosting and customer servers) use the same mechanism.
+    </div>
+
+    <div class="info-box" style="border-color: rgba(108,99,255,0.3);">
+      <strong>Design Decision &mdash; No Certificate Authority:</strong> Targets range from managed hosting to customer VPS to dedicated servers. Requiring customers to configure <code>TrustedUserCAKeys</code> adds friction without security benefit. Standard SSH keypairs with platform-enforced TTL (managed) or customer-controlled revocation (external) are sufficient.
     </div>
 
     <div class="highlight-box">
       <div class="highlight-value">15 min TTL</div>
-      <div class="highlight-label">Hardcoded on managed hosting platforms. Non-configurable. Platform-enforced expiry.<br>For customer targets: customer-controlled revocation via key removal.</div>
+      <div class="highlight-label">Hardcoded on managed hosting platforms. Non-configurable. Platform-enforced expiry + S3 lifecycle auto-expire.<br>For customer targets: customer-controlled revocation via key removal.</div>
     </div>
   </section>
 
@@ -1747,6 +1800,12 @@ DB_PASSWORD=real_password_here
           <td>API credential theft</td>
           <td><span class="severity-badge severity-critical">Critical</span></td>
           <td>K8s Secrets / Vault, RBAC, audit logging, API key rotation</td>
+        </tr>
+        <tr>
+          <td>S3 Key Store unauthorized access</td>
+          <td>IAM misconfiguration, credential leak</td>
+          <td><span class="severity-badge severity-critical">Critical</span></td>
+          <td>Strict IAM policies (write-only / read-only per service), no public access, S3 lifecycle auto-expire, audit logging on all access</td>
         </tr>
         <tr>
           <td>Lateral movement via MCP server</td>
