@@ -365,6 +365,16 @@
   .infra-table td { color: var(--text-dim); }
   .infra-table td:first-child { color: var(--text); font-weight: 500; }
 
+  .infra-table .group-header td {
+    padding-top: 2rem;
+    padding-bottom: 0.75rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 2px solid var(--border);
+  }
+
   .tag {
     display: inline-block;
     font-size: 0.7rem;
@@ -1160,7 +1170,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td colspan="4" style="color: var(--accent4); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">Claude Code (Tool Intranet Tech Limited)</td></tr>
+        <tr class="group-header"><td colspan="4" style="color: var(--accent4);">Claude Code (Tool Intranet Tech Limited)</td></tr>
         <tr>
           <td>Claude Code &rarr; Internet</td>
           <td>HTTPS, HTTP &mdash; all ports outbound</td>
@@ -1191,7 +1201,7 @@
           <td><span class="tag tag-red">DENY</span></td>
           <td>No direct SSH &mdash; all target access must go through MCP Server</td>
         </tr>
-        <tr><td colspan="4" style="color: var(--accent2); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">MCP Server (Trusted Zone)</td></tr>
+        <tr class="group-header"><td colspan="4" style="color: var(--accent2);">MCP Server (Trusted Zone)</td></tr>
         <tr>
           <td>MCP Server &rarr; Claude Code</td>
           <td>MCP response</td>
@@ -1222,7 +1232,7 @@
           <td><span class="tag tag-red">DENY</span></td>
           <td>Explicitly blocked &mdash; no LLM calls to Anthropic from Trusted Zone, ever</td>
         </tr>
-        <tr><td colspan="4" style="color: var(--accent4); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">S3 Key Store (Trusted Zone)</td></tr>
+        <tr class="group-header"><td colspan="4" style="color: var(--accent4);">S3 Key Store (Trusted Zone)</td></tr>
         <tr>
           <td>Platform MCP Server &rarr; S3 Key Store</td>
           <td>S3 API (HTTPS)</td>
@@ -1247,7 +1257,7 @@
           <td><span class="tag tag-red">DENY</span></td>
           <td>No external network access &mdash; Trusted Zone only</td>
         </tr>
-        <tr><td colspan="4" style="color: var(--accent2); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">Local AI (Trusted Zone)</td></tr>
+        <tr class="group-header"><td colspan="4" style="color: var(--accent2);">Local AI (Trusted Zone)</td></tr>
         <tr>
           <td>MCP Server &rarr; Local AI</td>
           <td>gRPC / HTTP :8080 (inbound)</td>
@@ -1266,14 +1276,14 @@
           <td><span class="tag tag-red">DENY</span></td>
           <td>No external network access &mdash; only talks to MCP Server</td>
         </tr>
-        <tr><td colspan="4" style="color: var(--accent2); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">Storage (Trusted Zone &mdash; Air-Gapped)</td></tr>
+        <tr class="group-header"><td colspan="4" style="color: var(--accent2);">Storage (Trusted Zone &mdash; Air-Gapped)</td></tr>
         <tr>
           <td>Storage &rarr; Internet</td>
           <td>Any</td>
           <td><span class="tag tag-red">DENY</span></td>
           <td>Completely air-gapped &mdash; zero external network access</td>
         </tr>
-        <tr><td colspan="4" style="color: var(--text-dim); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 1.25rem;">Inbound (Blocked by Default)</td></tr>
+        <tr class="group-header"><td colspan="4" style="color: var(--text-dim);">Inbound (Blocked by Default)</td></tr>
         <tr>
           <td>Targets &rarr; MCP Server</td>
           <td>Any</td>
